@@ -1,3 +1,4 @@
+import { teacherId } from '../../session'
 import { useState } from 'react'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL
@@ -32,7 +33,7 @@ function CreateQuestion() {
       const res = await fetch(`${API_BASE}/questions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: question, options, correctIndex, topic })
+        body: JSON.stringify({ text: question, options, correctIndex, topic, teacherId })
       })
 
       if (!res.ok) throw new Error('Failed to save question')
