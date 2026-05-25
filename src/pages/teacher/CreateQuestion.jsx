@@ -1,10 +1,15 @@
 import { useState } from 'react'
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL
+
 function CreateQuestion() {
   const [question, setQuestion] = useState('')
   const [options, setOptions] = useState(['', '', '', ''])
   const [correctIndex, setCorrectIndex] = useState(null)
   const [topic, setTopic] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState(null)
 
   const topics = ['Mathematics', 'Science', 'English', 'History', 'Geography']
 
@@ -14,9 +19,53 @@ function CreateQuestion() {
     setOptions(updated)
   }
 
+  async function handleSave() {
+    if (!question || options.some(o => !o) || correctIndex === null || !topic) {
+      setError('Please fill in all fields, select a correct answer and a topic.')
+      return
+    }
+
+    setSaving(true)
+    setError(null)
+
+    try {
+      const res = await fetch(`${API_BASE}/questions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: question, options, correctIndex, topic })
+      })
+
+      if (!res.ok) throw new Error('Failed to save question')
+
+      setSaved(true)
+      setQuestion('')
+      setOptions(['', '', '', ''])
+      setCorrectIndex(null)
+      setTopic('')
+      setTimeout(() => setSaved(false), 3000)
+
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
     <div style={{ maxWidth: 560, margin: '0 auto', padding: '24px' }}>
       <h2 style={{ marginBottom: '24px' }}>Create question</h2>
+
+      {saved && (
+        <div style={{ padding: '10px 14px', background: '#EAF3DE', color: '#3B6D11', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>
+          ✓ Question saved to bank!
+        </div>
+      )}
+
+      {error && (
+        <div style={{ padding: '10px 14px', background: '#FCEBEB', color: '#A32D2D', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>
+          {error}
+        </div>
+      )}
 
       <div style={{ marginBottom: '20px' }}>
         <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: '#888' }}>Question</label>
@@ -61,13 +110,11 @@ function CreateQuestion() {
               key={t}
               onClick={() => setTopic(t)}
               style={{
-                padding: '4px 12px',
-                borderRadius: '20px',
+                padding: '4px 12px', borderRadius: '20px',
                 border: '1px solid #AFA9EC',
                 background: topic === t ? '#534AB7' : '#EEEDFE',
                 color: topic === t ? 'white' : '#3C3489',
-                cursor: 'pointer',
-                fontSize: '13px'
+                cursor: 'pointer', fontSize: '13px'
               }}
             >
               {t}
@@ -77,10 +124,11 @@ function CreateQuestion() {
       </div>
 
       <button
-        style={{ width: '100%', padding: '12px', background: '#534AB7', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}
-        onClick={() => alert('Saved! (will connect to database later)')}
+        onClick={handleSave}
+        disabled={saving}
+        style={{ width: '100%', padding: '12px', background: saving ? '#aaa' : '#534AB7', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '500', cursor: saving ? 'not-allowed' : 'pointer' }}
       >
-        Save to question bank
+        {saving ? 'Saving...' : 'Save to question bank'}
       </button>
     </div>
   )
