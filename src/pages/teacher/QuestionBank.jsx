@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL
+const API_BASE = "https://quizpulse-api-b5bvbvgzdph6dyas.australiaeast-01.azurewebsites.net/api";
 
 const TOPIC_COLORS = {
   Science: { bg: '#E1F5EE', color: '#085041' },

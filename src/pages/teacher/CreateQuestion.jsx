@@ -1,7 +1,7 @@
 import { teacherId } from '../../session'
 import { useState } from 'react'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL
+const API_BASE = "https://quizpulse-api-b5bvbvgzdph6dyas.australiaeast-01.azurewebsites.net/api";
 
 function CreateQuestion() {
   const [question, setQuestion] = useState('')
