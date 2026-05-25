@@ -6,10 +6,12 @@ import SendQuiz from './pages/teacher/SendQuiz'
 import TakeQuiz from './pages/student/TakeQuiz'
 import Completion from './pages/student/Completion'
 import Analytics from './pages/teacher/Analytics'
+import DemoNav from './components/DemoNav'
 
 function App() {
   return (
     <BrowserRouter>
+      <DemoNav />
       <Routes>
         <Route path="/" element={<CreateQuestion />} />
         <Route path="/teacher/create" element={<CreateQuestion />} />
