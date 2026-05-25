@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL
+const API_BASE = '/api'
 
 const OPTION_COLORS = ['#E6F1FB', '#EEEDFE', '#FAEEDA', '#FBEAF0']
 const OPTION_BORDER = ['#185FA5', '#534AB7', '#633806', '#4B1528']
