@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useAuth } from '../../contexts/AuthContext'
 
 const API_BASE = "https://quizpulse-api-b5bvbvgzdph6dyas.australiaeast-01.azurewebsites.net/api";
 
@@ -11,6 +12,7 @@ const TOPIC_COLORS = {
 }
 
 function QuestionBank() {
+  const { teacherId } = useAuth()
   const [questions, setQuestions] = useState([])
   const [filter, setFilter] = useState('All')
   const [selected, setSelected] = useState([])
@@ -18,9 +20,10 @@ function QuestionBank() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    if (!teacherId) return
     async function fetchQuestions() {
       try {
-        const res = await fetch(`${API_BASE}/questions`)
+        const res = await fetch(`${API_BASE}/questions?teacherId=${teacherId}`)
         if (!res.ok) throw new Error('Failed to load questions')
         const data = await res.json()
         setQuestions(data)
@@ -31,7 +34,7 @@ function QuestionBank() {
       }
     }
     fetchQuestions()
-  }, [])
+  }, [teacherId])
 
   const topics = ['All', ...new Set(questions.map(q => q.topic))]
 

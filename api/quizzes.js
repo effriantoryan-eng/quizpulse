@@ -9,6 +9,29 @@ const client = new CosmosClient({
 const database = client.database(process.env.COSMOS_DATABASE);
 const container = database.container(process.env.COSMOS_CONTAINER_QUIZZES);
 
+app.http('getQuizById', {
+  methods: ['GET'],
+  authLevel: 'anonymous',
+  route: 'quizzes/{id}',
+  handler: async (request, context) => {
+    try {
+      const id = request.params.id;
+      const { resources } = await container.items.query({
+        query: 'SELECT * FROM c WHERE c.id = @id',
+        parameters: [{ name: '@id', value: id }]
+      }).fetchAll();
+
+      if (resources.length === 0) {
+        return { status: 404, jsonBody: { error: 'Quiz not found' } };
+      }
+
+      return { status: 200, jsonBody: resources[0] };
+    } catch (err) {
+      return { status: 500, jsonBody: { error: err.message } };
+    }
+  }
+});
+
 app.http('quizzes', {
   methods: ['GET', 'POST'],
   authLevel: 'anonymous',
@@ -21,20 +44,45 @@ app.http('quizzes', {
 
       if (request.method === 'POST') {
         const body = await request.json();
-        const { name, questionIds, classIds, teacherId } = body;
 
-        if (!name || !questionIds) {
-          return { status: 400, jsonBody: { error: 'Missing required fields' } };
+        if (!body || typeof body !== 'object' || Array.isArray(body)) {
+          return { status: 400, jsonBody: { error: 'Request body must be a JSON object' } };
+        }
+
+        const { name, questionIds, classIds, teacherId, status, sentAt } = body;
+
+        const ALLOWED_STATUSES = ['draft', 'sent', 'scheduled'];
+
+        if (typeof name !== 'string' || !name.trim()) {
+          return { status: 400, jsonBody: { error: 'name is required and must be a string' } };
+        }
+        if (name.trim().length > 200) {
+          return { status: 400, jsonBody: { error: 'name must be 200 characters or fewer' } };
+        }
+        if (!Array.isArray(questionIds) || questionIds.length === 0) {
+          return { status: 400, jsonBody: { error: 'questionIds must be a non-empty array' } };
+        }
+        if (questionIds.length > 50) {
+          return { status: 400, jsonBody: { error: 'questionIds must contain 50 items or fewer' } };
+        }
+        if (questionIds.some(id => typeof id !== 'string' || !id.trim())) {
+          return { status: 400, jsonBody: { error: 'each questionId must be a non-empty string' } };
+        }
+        if (classIds !== undefined && !Array.isArray(classIds)) {
+          return { status: 400, jsonBody: { error: 'classIds must be an array' } };
+        }
+        if (status !== undefined && !ALLOWED_STATUSES.includes(status)) {
+          return { status: 400, jsonBody: { error: `status must be one of: ${ALLOWED_STATUSES.join(', ')}` } };
         }
 
         const quiz = {
           id: require('crypto').randomUUID(),
-          teacherId: teacherId || 'anonymous',
-          name,
-          questionIds,
-          classIds: classIds || [],
-          status: 'draft',
-          sentAt: null,
+          teacherId: typeof teacherId === 'string' ? teacherId.trim().slice(0, 100) : 'anonymous',
+          name: name.trim(),
+          questionIds: questionIds.map(id => id.trim()),
+          classIds: Array.isArray(classIds) ? classIds.map(id => String(id).trim().slice(0, 100)) : [],
+          status: status || 'draft',
+          sentAt: sentAt || null,
           scheduledFor: null,
           createdAt: new Date().toISOString()
         };

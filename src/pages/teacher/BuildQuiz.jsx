@@ -1,9 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../contexts/AuthContext'
 
-const INITIAL_QUESTIONS = [
-  { id: 1, text: 'Which of the following best describes the role of chlorophyll in photosynthesis?', topic: 'Science' },
-  { id: 2, text: 'What process do plants use to make their own food using sunlight?', topic: 'Science' },
-]
+const API_BASE = 'https://quizpulse-api-b5bvbvgzdph6dyas.australiaeast-01.azurewebsites.net/api'
 
 const TOPIC_COLORS = {
   Science: { bg: '#E1F5EE', color: '#085041' },
@@ -14,32 +13,72 @@ const TOPIC_COLORS = {
 }
 
 function BuildQuiz() {
-  const [quizName, setQuizName] = useState('Week 4 — Photosynthesis check-in')
-  const [questions, setQuestions] = useState(INITIAL_QUESTIONS)
+  const { teacherId } = useAuth()
+  const navigate = useNavigate()
+  const [quizName, setQuizName] = useState('')
+  const [allQuestions, setAllQuestions] = useState([])
+  const [selected, setSelected] = useState([])
   const [previewIndex, setPreviewIndex] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    if (!teacherId) return
+    async function fetchQuestions() {
+      try {
+        const res = await fetch(`${API_BASE}/questions?teacherId=${teacherId}`)
+        if (!res.ok) throw new Error(`Server error ${res.status}`)
+        const data = await res.json()
+        setAllQuestions(data)
+        setSelected(data)
+        setPreviewIndex(0)
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchQuestions()
+  }, [teacherId])
 
   function moveUp(index) {
     if (index === 0) return
-    const updated = [...questions]
+    const updated = [...selected]
     ;[updated[index - 1], updated[index]] = [updated[index], updated[index - 1]]
-    setQuestions(updated)
+    setSelected(updated)
     if (previewIndex === index) setPreviewIndex(index - 1)
   }
 
   function moveDown(index) {
-    if (index === questions.length - 1) return
-    const updated = [...questions]
+    if (index === selected.length - 1) return
+    const updated = [...selected]
     ;[updated[index], updated[index + 1]] = [updated[index + 1], updated[index]]
-    setQuestions(updated)
+    setSelected(updated)
     if (previewIndex === index) setPreviewIndex(index + 1)
   }
 
   function removeQuestion(id) {
-    setQuestions(prev => prev.filter(q => q.id !== id))
+    setSelected(prev => prev.filter(q => q.id !== id))
     setPreviewIndex(0)
   }
 
-  const previewQuestion = questions[previewIndex]
+  const previewQuestion = selected[previewIndex]
+
+  if (loading) {
+    return (
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: '24px', color: '#888', fontSize: '14px' }}>
+        Loading questions…
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: '24px', color: '#c0392b', fontSize: '14px' }}>
+        Failed to load questions: {error}
+      </div>
+    )
+  }
 
   return (
     <div style={{ maxWidth: 760, margin: '0 auto', padding: '24px' }}>
@@ -54,6 +93,7 @@ function BuildQuiz() {
             <input
               type="text"
               value={quizName}
+              placeholder="e.g. Week 4 — Photosynthesis check-in"
               onChange={e => setQuizName(e.target.value)}
               style={{ width: '100%', padding: '8px 10px', fontSize: '14px', boxSizing: 'border-box' }}
             />
@@ -61,16 +101,16 @@ function BuildQuiz() {
 
           <div style={{ borderTop: '1px solid #eee', paddingTop: '16px', marginBottom: '10px' }}>
             <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: '#888', marginBottom: '10px' }}>
-              Selected questions ({questions.length})
+              Selected questions ({selected.length})
             </div>
 
-            {questions.length === 0 && (
+            {selected.length === 0 && (
               <div style={{ fontSize: '13px', color: '#aaa', padding: '16px', textAlign: 'center', border: '1px dashed #ddd', borderRadius: '8px' }}>
                 No questions added yet
               </div>
             )}
 
-            {questions.map((q, i) => {
+            {selected.map((q, i) => {
               const topicStyle = TOPIC_COLORS[q.topic] || { bg: '#EEEDFE', color: '#3C3489' }
               return (
                 <div
@@ -103,7 +143,7 @@ function BuildQuiz() {
 
             <div
               style={{ border: '1px dashed #ddd', borderRadius: '8px', padding: '12px', textAlign: 'center', fontSize: '13px', color: '#aaa', cursor: 'pointer', marginTop: '4px' }}
-              onClick={() => alert('Will navigate to Question Bank')}
+              onClick={() => navigate('/teacher/bank')}
             >
               + Add more from bank
             </div>
@@ -119,13 +159,13 @@ function BuildQuiz() {
             {previewQuestion ? (
               <>
                 <div style={{ fontSize: '11px', color: '#aaa', textAlign: 'center', marginBottom: '10px' }}>
-                  Question {previewIndex + 1} of {questions.length}
+                  Question {previewIndex + 1} of {selected.length}
                 </div>
                 <div style={{ background: 'white', borderRadius: '8px', padding: '14px', marginBottom: '12px', fontSize: '14px', lineHeight: '1.5' }}>
                   {previewQuestion.text}
                 </div>
-                {['Option A', 'Option B', 'Option C', 'Option D'].map((opt, i) => (
-                  <div key={i} style={{ background: i === 1 ? '#EEEDFE' : 'white', border: `1px solid ${i === 1 ? '#534AB7' : '#eee'}`, borderRadius: '8px', padding: '10px 14px', marginBottom: '8px', fontSize: '13px', color: i === 1 ? '#3C3489' : '#333' }}>
+                {(previewQuestion.options || []).map((opt, i) => (
+                  <div key={i} style={{ background: i === previewQuestion.correctIndex ? '#EEEDFE' : 'white', border: `1px solid ${i === previewQuestion.correctIndex ? '#534AB7' : '#eee'}`, borderRadius: '8px', padding: '10px 14px', marginBottom: '8px', fontSize: '13px', color: i === previewQuestion.correctIndex ? '#3C3489' : '#333' }}>
                     {opt}
                   </div>
                 ))}
@@ -136,8 +176,9 @@ function BuildQuiz() {
           </div>
 
           <button
-            style={{ width: '100%', marginTop: '16px', padding: '12px', background: '#534AB7', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}
-            onClick={() => alert('Save and go to Send Quiz — will connect later')}
+            disabled={selected.length === 0 || !quizName.trim()}
+            style={{ width: '100%', marginTop: '16px', padding: '12px', background: selected.length === 0 || !quizName.trim() ? '#ccc' : '#534AB7', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '500', cursor: selected.length === 0 || !quizName.trim() ? 'not-allowed' : 'pointer' }}
+            onClick={() => navigate('/teacher/send', { state: { quizName, questionIds: selected.map(q => q.id) } })}
           >
             Save & go to send →
           </button>

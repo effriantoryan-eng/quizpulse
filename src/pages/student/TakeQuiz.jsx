@@ -1,52 +1,67 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 
-const API_BASE = "https://quizpulse-api-b5bvbvgzdph6dyas.australiaeast-01.azurewebsites.net/api";
-
-const QUESTIONS = [
-  {
-    id: '1',
-    text: 'Which of the following best describes the role of chlorophyll in photosynthesis?',
-    options: [
-      'It absorbs sunlight to power the reaction',
-      'It converts CO₂ into glucose',
-      'It transports water from roots to leaves',
-      'It releases oxygen through transpiration',
-    ],
-    correctIndex: 1,
-  },
-  {
-    id: '2',
-    text: 'What process do plants use to make their own food using sunlight?',
-    options: ['Respiration', 'Transpiration', 'Photosynthesis', 'Osmosis'],
-    correctIndex: 2,
-  },
-]
-
-const QUIZ_ID = 'demo-quiz-001'
+const API_BASE = 'https://quizpulse-api-b5bvbvgzdph6dyas.australiaeast-01.azurewebsites.net/api'
 
 function TakeQuiz() {
+  const { id } = useParams()
   const navigate = useNavigate()
+
+  const [quiz, setQuiz] = useState(null)
+  const [questions, setQuestions] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
   const [currentIndex, setCurrentIndex] = useState(0)
   const [selectedOption, setSelectedOption] = useState(null)
   const [confirmed, setConfirmed] = useState(false)
   const [answers, setAnswers] = useState([])
 
-  const question = QUESTIONS[currentIndex]
-  const isLast = currentIndex === QUESTIONS.length - 1
+  useEffect(() => {
+    async function load() {
+      try {
+        const [quizRes, questionsRes] = await Promise.all([
+          fetch(`${API_BASE}/quizzes/${id}`),
+          fetch(`${API_BASE}/questions`),
+        ])
+
+        if (quizRes.status === 404) throw new Error('Quiz not found')
+        if (!quizRes.ok) throw new Error(`Server error ${quizRes.status}`)
+        if (!questionsRes.ok) throw new Error(`Server error ${questionsRes.status}`)
+
+        const quizData = await quizRes.json()
+        const allQuestions = await questionsRes.json()
+
+        const ordered = quizData.questionIds
+          .map(qid => allQuestions.find(q => q.id === qid))
+          .filter(Boolean)
+
+        if (ordered.length === 0) throw new Error('This quiz has no questions')
+
+        setQuiz(quizData)
+        setQuestions(ordered)
+      } catch (err) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [id])
 
   function handleConfirm() {
     setConfirmed(true)
-    setAnswers(prev => [...prev, { questionId: question.id, selectedIndex: selectedOption }])
+    setAnswers(prev => [...prev, { questionId: questions[currentIndex].id, selectedIndex: selectedOption }])
   }
 
   async function handleNext() {
+    const isLast = currentIndex === questions.length - 1
     if (isLast) {
       try {
         await fetch(`${API_BASE}/responses`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ quizId: QUIZ_ID, answers })
+          body: JSON.stringify({ quizId: id, answers }),
         })
       } catch (err) {
         console.error('Failed to save response', err)
@@ -60,6 +75,7 @@ function TakeQuiz() {
   }
 
   function getOptionStyle(i) {
+    const question = questions[currentIndex]
     const base = {
       width: '100%', textAlign: 'left', padding: '10px 14px', marginBottom: '8px',
       borderRadius: '10px', fontSize: '14px', cursor: confirmed ? 'default' : 'pointer',
@@ -75,16 +91,41 @@ function TakeQuiz() {
     return base
   }
 
+  if (loading) {
+    return (
+      <div style={{ maxWidth: 480, margin: '0 auto', padding: '24px', color: '#888', fontSize: '14px' }}>
+        Loading quiz…
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div style={{ maxWidth: 480, margin: '0 auto', padding: '24px' }}>
+        <div style={{ color: '#c0392b', fontSize: '14px', marginBottom: '12px' }}>{error}</div>
+        <button
+          onClick={() => navigate('/')}
+          style={{ padding: '10px 20px', background: '#534AB7', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', cursor: 'pointer' }}
+        >
+          Go home
+        </button>
+      </div>
+    )
+  }
+
+  const question = questions[currentIndex]
+  const isLast = currentIndex === questions.length - 1
+
   return (
     <div style={{ maxWidth: 480, margin: '0 auto', padding: '0' }}>
       <div style={{ background: '#534AB7', padding: '16px 20px', color: 'white' }}>
-        <div style={{ fontSize: '11px', opacity: 0.75, marginBottom: '2px' }}>Ms. Santos · Science</div>
+        <div style={{ fontSize: '11px', opacity: 0.75, marginBottom: '2px' }}>{question.topic}</div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <div style={{ fontSize: '15px', fontWeight: '500' }}>Week 4 — Photosynthesis</div>
-          <div style={{ fontSize: '12px', opacity: 0.8 }}>Q {currentIndex + 1}/{QUESTIONS.length}</div>
+          <div style={{ fontSize: '15px', fontWeight: '500' }}>{quiz.name}</div>
+          <div style={{ fontSize: '12px', opacity: 0.8 }}>Q {currentIndex + 1}/{questions.length}</div>
         </div>
         <div style={{ background: 'rgba(255,255,255,0.25)', borderRadius: '4px', height: '4px' }}>
-          <div style={{ background: 'white', height: '4px', borderRadius: '4px', width: `${((currentIndex + 1) / QUESTIONS.length) * 100}%`, transition: 'width 0.3s' }}></div>
+          <div style={{ background: 'white', height: '4px', borderRadius: '4px', width: `${((currentIndex + 1) / questions.length) * 100}%`, transition: 'width 0.3s' }}></div>
         </div>
       </div>
 

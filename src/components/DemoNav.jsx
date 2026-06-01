@@ -1,20 +1,42 @@
-// Add this component to src/App.jsx (or a separate src/components/DemoNav.jsx)
-// Then render <DemoNav /> inside your router, above the Routes/Switch
-
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
-const PAGES = [
+const API_BASE = 'https://quizpulse-api-b5bvbvgzdph6dyas.australiaeast-01.azurewebsites.net/api'
+
+const STATIC_PAGES = [
   { label: '✏️ Create Question', path: '/teacher/create' },
   { label: '🗂 Question Bank',   path: '/teacher/bank'   },
   { label: '🔧 Build Quiz',      path: '/teacher/build'  },
   { label: '📤 Send Quiz',       path: '/teacher/send'   },
-  { label: '📱 Student View',    path: '/student/quiz/demo-quiz-001' },
-  { label: '✅ Completion',      path: '/student/done'   },
 ]
 
 export default function DemoNav() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const [latestQuizId, setLatestQuizId] = useState(null)
+
+  useEffect(() => {
+    async function fetchLatestQuiz() {
+      try {
+        const res = await fetch(`${API_BASE}/quizzes`)
+        if (!res.ok) return
+        const quizzes = await res.json()
+        if (quizzes.length === 0) return
+        const latest = quizzes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]
+        setLatestQuizId(latest.id)
+      } catch {
+        // silently fail — nav degrades gracefully
+      }
+    }
+    fetchLatestQuiz()
+  }, [])
+
+  const dynamicPages = [
+    ...STATIC_PAGES,
+    { label: '📱 Student View', path: latestQuizId ? `/student/quiz/${latestQuizId}` : null },
+    { label: '📊 Analytics',    path: latestQuizId ? `/teacher/analytics/${latestQuizId}` : null },
+    { label: '✅ Completion',   path: '/student/done' },
+  ]
 
   return (
     <div style={{
@@ -47,26 +69,28 @@ export default function DemoNav() {
       </div>
 
       {/* Nav buttons */}
-      {PAGES.map(({ label, path }) => {
-        const active = pathname === path || pathname.startsWith(path.split('/').slice(0, 3).join('/'))
+      {dynamicPages.map(({ label, path }) => {
+        const disabled = !path
+        const active = path && (pathname === path || pathname.startsWith(path.split('/').slice(0, 3).join('/')))
         return (
           <button
-            key={path}
-            onClick={() => navigate(path)}
+            key={label}
+            onClick={() => path && navigate(path)}
+            disabled={disabled}
             style={{
               padding: '5px 12px',
               borderRadius: '6px',
               border: active ? '1px solid rgba(83,74,183,0.8)' : '1px solid rgba(255,255,255,0.1)',
               background: active ? 'rgba(83,74,183,0.35)' : 'transparent',
-              color: active ? 'white' : 'rgba(255,255,255,0.55)',
+              color: active ? 'white' : disabled ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.55)',
               fontSize: '12px',
               fontWeight: active ? '500' : '400',
-              cursor: 'pointer',
+              cursor: disabled ? 'not-allowed' : 'pointer',
               transition: 'all 0.15s',
               whiteSpace: 'nowrap',
             }}
-            onMouseEnter={e => { if (!active) e.target.style.color = 'rgba(255,255,255,0.85)' }}
-            onMouseLeave={e => { if (!active) e.target.style.color = 'rgba(255,255,255,0.55)' }}
+            onMouseEnter={e => { if (!active && !disabled) e.target.style.color = 'rgba(255,255,255,0.85)' }}
+            onMouseLeave={e => { if (!active && !disabled) e.target.style.color = 'rgba(255,255,255,0.55)' }}
           >
             {label}
           </button>

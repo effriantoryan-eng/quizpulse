@@ -7,5 +7,4 @@ export function getSessionId(key) {
   return id
 }
 
-export const teacherId = getSessionId('quizpulse_teacher_id')
 export const studentId = getSessionId('quizpulse_student_id')

@@ -1,9 +1,10 @@
-import { teacherId } from '../../session'
 import { useState } from 'react'
+import { useAuth } from '../../contexts/AuthContext'
 
 const API_BASE = "https://quizpulse-api-b5bvbvgzdph6dyas.australiaeast-01.azurewebsites.net/api";
 
 function CreateQuestion() {
+  const { teacherId } = useAuth()
   const [question, setQuestion] = useState('')
   const [options, setOptions] = useState(['', '', '', ''])
   const [correctIndex, setCorrectIndex] = useState(null)

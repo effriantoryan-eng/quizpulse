@@ -21,17 +21,42 @@ app.http('questions', {
 
       if (request.method === 'POST') {
         const body = await request.json();
+
+        if (!body || typeof body !== 'object' || Array.isArray(body)) {
+          return { status: 400, jsonBody: { error: 'Request body must be a JSON object' } };
+        }
+
         const { text, options, correctIndex, topic, teacherId } = body;
 
-        if (!text || !options || correctIndex === undefined || !topic) {
-          return { status: 400, jsonBody: { error: 'Missing required fields' } };
+        const ALLOWED_TOPICS = ['Science', 'History', 'Mathematics', 'English', 'Geography'];
+
+        if (typeof text !== 'string' || !text.trim()) {
+          return { status: 400, jsonBody: { error: 'text is required and must be a string' } };
+        }
+        if (text.trim().length > 500) {
+          return { status: 400, jsonBody: { error: 'text must be 500 characters or fewer' } };
+        }
+        if (!Array.isArray(options) || options.length !== 4) {
+          return { status: 400, jsonBody: { error: 'options must be an array of exactly 4 items' } };
+        }
+        if (options.some(o => typeof o !== 'string' || !o.trim())) {
+          return { status: 400, jsonBody: { error: 'each option must be a non-empty string' } };
+        }
+        if (options.some(o => o.trim().length > 200)) {
+          return { status: 400, jsonBody: { error: 'each option must be 200 characters or fewer' } };
+        }
+        if (typeof correctIndex !== 'number' || !Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex > 3) {
+          return { status: 400, jsonBody: { error: 'correctIndex must be an integer between 0 and 3' } };
+        }
+        if (!ALLOWED_TOPICS.includes(topic)) {
+          return { status: 400, jsonBody: { error: `topic must be one of: ${ALLOWED_TOPICS.join(', ')}` } };
         }
 
         const question = {
           id: require('crypto').randomUUID(),
-          teacherId: teacherId || 'anonymous',
-          text,
-          options,
+          teacherId: typeof teacherId === 'string' ? teacherId.trim().slice(0, 100) : 'anonymous',
+          text: text.trim(),
+          options: options.map(o => o.trim()),
           correctIndex,
           topic,
           createdAt: new Date().toISOString()
