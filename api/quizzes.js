@@ -64,6 +64,11 @@ app.http('quizzes', {
       }
 
       if (request.method === 'POST') {
+        const contentLength = parseInt(request.headers.get('content-length') || '0', 10);
+        if (contentLength > 65536) {
+          return { status: 413, jsonBody: { error: 'Request body too large. Maximum size is 64KB' } };
+        }
+
         const body = await request.json();
 
         if (!body || typeof body !== 'object' || Array.isArray(body)) {
