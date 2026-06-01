@@ -58,11 +58,15 @@ function TakeQuiz() {
     const isLast = currentIndex === questions.length - 1
     if (isLast) {
       try {
-        await fetch(`${API_BASE}/responses`, {
+        const res = await fetch(`${API_BASE}/responses`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ quizId: id, answers }),
         })
+        // 409 means already submitted — still send to done screen, quiz is complete
+        if (!res.ok && res.status !== 409) {
+          console.error('Failed to save response', res.status)
+        }
       } catch (err) {
         console.error('Failed to save response', err)
       }

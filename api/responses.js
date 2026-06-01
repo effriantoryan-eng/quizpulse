@@ -58,10 +58,27 @@ app.http('responses', {
           }
         }
 
+        const resolvedStudentId = typeof studentId === 'string' && studentId.trim()
+          ? studentId.trim().slice(0, 100)
+          : require('crypto').randomUUID();
+
+        // Idempotency check — prevent duplicate submissions for the same student + quiz
+        const { resources: existing } = await container.items.query({
+          query: 'SELECT c.id FROM c WHERE c.quizId = @quizId AND c.studentId = @studentId',
+          parameters: [
+            { name: '@quizId', value: quizId.trim() },
+            { name: '@studentId', value: resolvedStudentId }
+          ]
+        }).fetchAll();
+
+        if (existing.length > 0) {
+          return { status: 409, jsonBody: { error: 'You have already submitted a response for this quiz' } };
+        }
+
         const response = {
           id: require('crypto').randomUUID(),
           quizId: quizId.trim(),
-          studentId: typeof studentId === 'string' && studentId.trim() ? studentId.trim().slice(0, 100) : require('crypto').randomUUID(),
+          studentId: resolvedStudentId,
           answers: answers.map(a => ({ questionId: a.questionId.trim(), selectedIndex: a.selectedIndex })),
           completedAt: new Date().toISOString()
         };
