@@ -1,6 +1,7 @@
 const { app } = require('@azure/functions');
 const { CosmosClient } = require('@azure/cosmos');
 const { rateLimit, getClientIp } = require('./rateLimit');
+const { logRequest } = require('./logger');
 
 const client = new CosmosClient({
   endpoint: process.env.COSMOS_ENDPOINT,
@@ -15,6 +16,13 @@ app.http('getQuizById', {
   authLevel: 'anonymous',
   route: 'quizzes/{id}',
   handler: async (request, context) => {
+    const start = Date.now()
+
+    function respond(status, body, teacherId) {
+      logRequest(context, { endpoint: 'quizzes/:id', method: 'GET', status, durationMs: Date.now() - start, teacherId })
+      return { status, jsonBody: body }
+    }
+
     try {
       const id = request.params.id;
       const teacherId = new URL(request.url).searchParams.get('teacherId');
@@ -25,7 +33,7 @@ app.http('getQuizById', {
       }).fetchAll();
 
       if (resources.length === 0) {
-        return { status: 404, jsonBody: { error: 'Quiz not found' } };
+        return respond(404, { error: 'Quiz not found' }, teacherId)
       }
 
       const quiz = resources[0];
@@ -33,12 +41,13 @@ app.http('getQuizById', {
       // Ownership check — only enforced for teacher requests (teacherId present).
       // Student requests via TakeQuiz do not send a teacherId and are allowed through.
       if (teacherId && quiz.teacherId !== teacherId.trim()) {
-        return { status: 403, jsonBody: { error: 'You do not have access to this quiz' } };
+        return respond(403, { error: 'You do not have access to this quiz' }, teacherId)
       }
 
-      return { status: 200, jsonBody: quiz };
+      return respond(200, quiz, teacherId)
     } catch (err) {
       context.log.error('quizzes error:', err.message);
+      logRequest(context, { endpoint: 'quizzes/:id', method: 'GET', status: 500, durationMs: Date.now() - start })
       return { status: 500, jsonBody: { error: 'An unexpected error occurred' } };
     }
   }
@@ -48,12 +57,20 @@ app.http('quizzes', {
   methods: ['GET', 'POST'],
   authLevel: 'anonymous',
   handler: async (request, context) => {
+    const start = Date.now()
+    const method = request.method
+
+    function respond(status, body, teacherId) {
+      logRequest(context, { endpoint: 'quizzes', method, status, durationMs: Date.now() - start, teacherId })
+      return { status, jsonBody: body }
+    }
+
     try {
-      if (request.method === 'GET') {
+      if (method === 'GET') {
         const teacherId = new URL(request.url).searchParams.get('teacherId');
 
         if (!teacherId || !teacherId.trim()) {
-          return { status: 400, jsonBody: { error: 'teacherId is required' } };
+          return respond(400, { error: 'teacherId is required' })
         }
 
         const { resources } = await container.items.query({
@@ -61,50 +78,49 @@ app.http('quizzes', {
           parameters: [{ name: '@teacherId', value: teacherId.trim() }]
         }).fetchAll();
 
-        return { status: 200, jsonBody: resources };
+        return respond(200, resources, teacherId)
       }
 
-      if (request.method === 'POST') {
+      if (method === 'POST') {
         const ip = getClientIp(request);
         if (!rateLimit(`quizzes:${ip}`, 10, 60000)) {
-          return { status: 429, jsonBody: { error: 'Too many requests. Please try again later.' } };
+          return respond(429, { error: 'Too many requests. Please try again later.' })
         }
 
         const contentLength = parseInt(request.headers.get('content-length') || '0', 10);
         if (contentLength > 65536) {
-          return { status: 413, jsonBody: { error: 'Request body too large. Maximum size is 64KB' } };
+          return respond(413, { error: 'Request body too large. Maximum size is 64KB' })
         }
 
         const body = await request.json();
 
         if (!body || typeof body !== 'object' || Array.isArray(body)) {
-          return { status: 400, jsonBody: { error: 'Request body must be a JSON object' } };
+          return respond(400, { error: 'Request body must be a JSON object' })
         }
 
         const { name, questionIds, classIds, teacherId, status, sentAt } = body;
-
         const ALLOWED_STATUSES = ['draft', 'sent', 'scheduled'];
 
         if (typeof name !== 'string' || !name.trim()) {
-          return { status: 400, jsonBody: { error: 'name is required and must be a string' } };
+          return respond(400, { error: 'name is required and must be a string' }, teacherId)
         }
         if (name.trim().length > 200) {
-          return { status: 400, jsonBody: { error: 'name must be 200 characters or fewer' } };
+          return respond(400, { error: 'name must be 200 characters or fewer' }, teacherId)
         }
         if (!Array.isArray(questionIds) || questionIds.length === 0) {
-          return { status: 400, jsonBody: { error: 'questionIds must be a non-empty array' } };
+          return respond(400, { error: 'questionIds must be a non-empty array' }, teacherId)
         }
         if (questionIds.length > 50) {
-          return { status: 400, jsonBody: { error: 'questionIds must contain 50 items or fewer' } };
+          return respond(400, { error: 'questionIds must contain 50 items or fewer' }, teacherId)
         }
         if (questionIds.some(id => typeof id !== 'string' || !id.trim())) {
-          return { status: 400, jsonBody: { error: 'each questionId must be a non-empty string' } };
+          return respond(400, { error: 'each questionId must be a non-empty string' }, teacherId)
         }
         if (classIds !== undefined && !Array.isArray(classIds)) {
-          return { status: 400, jsonBody: { error: 'classIds must be an array' } };
+          return respond(400, { error: 'classIds must be an array' }, teacherId)
         }
         if (status !== undefined && !ALLOWED_STATUSES.includes(status)) {
-          return { status: 400, jsonBody: { error: `status must be one of: ${ALLOWED_STATUSES.join(', ')}` } };
+          return respond(400, { error: `status must be one of: ${ALLOWED_STATUSES.join(', ')}` }, teacherId)
         }
 
         const quiz = {
@@ -120,13 +136,14 @@ app.http('quizzes', {
         };
 
         const { resource } = await container.items.create(quiz);
-        return { status: 201, jsonBody: resource };
+        return respond(201, resource, quiz.teacherId)
       }
 
-      return { status: 405, jsonBody: { error: 'Method not allowed' } };
+      return respond(405, { error: 'Method not allowed' })
 
     } catch (err) {
       context.log.error('quizzes error:', err.message);
+      logRequest(context, { endpoint: 'quizzes', method, status: 500, durationMs: Date.now() - start })
       return { status: 500, jsonBody: { error: 'An unexpected error occurred' } };
     }
   }
