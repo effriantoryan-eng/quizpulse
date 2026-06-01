@@ -90,7 +90,8 @@ app.http('responses', {
       return { status: 405, jsonBody: { error: 'Method not allowed' } };
 
     } catch (err) {
-      return { status: 500, jsonBody: { error: err.message } };
+      context.log.error('responses error:', err.message);
+      return { status: 500, jsonBody: { error: 'An unexpected error occurred' } };
     }
   }
 });
