@@ -1,5 +1,6 @@
 const { app } = require('@azure/functions');
 const { CosmosClient } = require('@azure/cosmos');
+const { rateLimit, getClientIp } = require('./rateLimit');
 
 const client = new CosmosClient({
   endpoint: process.env.COSMOS_ENDPOINT,
@@ -30,6 +31,11 @@ app.http('questions', {
       }
 
       if (request.method === 'POST') {
+        const ip = getClientIp(request);
+        if (!rateLimit(`questions:${ip}`, 30, 60000)) {
+          return { status: 429, jsonBody: { error: 'Too many requests. Please try again later.' } };
+        }
+
         const contentLength = parseInt(request.headers.get('content-length') || '0', 10);
         if (contentLength > 65536) {
           return { status: 413, jsonBody: { error: 'Request body too large. Maximum size is 64KB' } };
