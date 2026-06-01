@@ -15,7 +15,17 @@ app.http('questions', {
   handler: async (request, context) => {
     try {
       if (request.method === 'GET') {
-        const { resources } = await container.items.readAll().fetchAll();
+        const teacherId = new URL(request.url).searchParams.get('teacherId');
+
+        if (!teacherId || !teacherId.trim()) {
+          return { status: 400, jsonBody: { error: 'teacherId is required' } };
+        }
+
+        const { resources } = await container.items.query({
+          query: 'SELECT * FROM c WHERE c.teacherId = @teacherId',
+          parameters: [{ name: '@teacherId', value: teacherId.trim() }]
+        }).fetchAll();
+
         return { status: 200, jsonBody: resources };
       }
 

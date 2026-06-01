@@ -16,6 +16,8 @@ app.http('getQuizById', {
   handler: async (request, context) => {
     try {
       const id = request.params.id;
+      const teacherId = new URL(request.url).searchParams.get('teacherId');
+
       const { resources } = await container.items.query({
         query: 'SELECT * FROM c WHERE c.id = @id',
         parameters: [{ name: '@id', value: id }]
@@ -25,7 +27,15 @@ app.http('getQuizById', {
         return { status: 404, jsonBody: { error: 'Quiz not found' } };
       }
 
-      return { status: 200, jsonBody: resources[0] };
+      const quiz = resources[0];
+
+      // Ownership check — only enforced for teacher requests (teacherId present).
+      // Student requests via TakeQuiz do not send a teacherId and are allowed through.
+      if (teacherId && quiz.teacherId !== teacherId.trim()) {
+        return { status: 403, jsonBody: { error: 'You do not have access to this quiz' } };
+      }
+
+      return { status: 200, jsonBody: quiz };
     } catch (err) {
       return { status: 500, jsonBody: { error: err.message } };
     }
@@ -38,7 +48,17 @@ app.http('quizzes', {
   handler: async (request, context) => {
     try {
       if (request.method === 'GET') {
-        const { resources } = await container.items.readAll().fetchAll();
+        const teacherId = new URL(request.url).searchParams.get('teacherId');
+
+        if (!teacherId || !teacherId.trim()) {
+          return { status: 400, jsonBody: { error: 'teacherId is required' } };
+        }
+
+        const { resources } = await container.items.query({
+          query: 'SELECT * FROM c WHERE c.teacherId = @teacherId',
+          parameters: [{ name: '@teacherId', value: teacherId.trim() }]
+        }).fetchAll();
+
         return { status: 200, jsonBody: resources };
       }
 
