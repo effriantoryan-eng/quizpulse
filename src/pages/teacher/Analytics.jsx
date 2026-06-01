@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 
-const API_BASE = "https://quizpulse-api-b5bvbvgzdph6dyas.australiaeast-01.azurewebsites.net/api";
+import API_BASE from '../../api'
 
 const OPTION_COLORS = ['#E6F1FB', '#EEEDFE', '#FAEEDA', '#FBEAF0']
 const OPTION_BORDER = ['#185FA5', '#534AB7', '#633806', '#4B1528']

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 
-const API_BASE = 'https://quizpulse-api-b5bvbvgzdph6dyas.australiaeast-01.azurewebsites.net/api'
+import API_BASE from '../../api'
 
 const CLASSES = [
   { id: 'yr9-sci-p3', name: 'Year 9 Science — Period 3', students: 28, topic: 'Science' },

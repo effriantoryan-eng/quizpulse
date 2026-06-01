@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 
-const API_BASE = "https://quizpulse-api-b5bvbvgzdph6dyas.australiaeast-01.azurewebsites.net/api";
+import API_BASE from '../../api'
 
 const TOPIC_COLORS = {
   Science: { bg: '#E1F5EE', color: '#085041' },

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
-const API_BASE = 'https://quizpulse-api-b5bvbvgzdph6dyas.australiaeast-01.azurewebsites.net/api'
+import API_BASE from '../api'
 
 const STATIC_PAGES = [
   { label: '✏️ Create Question', path: '/teacher/create' },
