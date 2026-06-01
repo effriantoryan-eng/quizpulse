@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-
 import API_BASE from '../api'
+import { useAuth } from '../contexts/AuthContext'
 
 const STATIC_PAGES = [
   { label: '✏️ Create Question', path: '/teacher/create' },
@@ -13,12 +13,14 @@ const STATIC_PAGES = [
 export default function DemoNav() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const { teacherId } = useAuth()
   const [latestQuizId, setLatestQuizId] = useState(null)
 
   useEffect(() => {
+    if (!teacherId) return
     async function fetchLatestQuiz() {
       try {
-        const res = await fetch(`${API_BASE}/quizzes`)
+        const res = await fetch(`${API_BASE}/quizzes?teacherId=${teacherId}`)
         if (!res.ok) return
         const quizzes = await res.json()
         if (quizzes.length === 0) return
@@ -29,7 +31,7 @@ export default function DemoNav() {
       }
     }
     fetchLatestQuiz()
-  }, [])
+  }, [teacherId])
 
   const dynamicPages = [
     ...STATIC_PAGES,

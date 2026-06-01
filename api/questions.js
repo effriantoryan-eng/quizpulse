@@ -1,5 +1,7 @@
 const { app } = require('@azure/functions');
 const { CosmosClient } = require('@azure/cosmos');
+const { rateLimit, getClientIp } = require('./rateLimit');
+const { logRequest } = require('./logger');
 
 const client = new CosmosClient({
   endpoint: process.env.COSMOS_ENDPOINT,
@@ -13,43 +15,70 @@ app.http('questions', {
   methods: ['GET', 'POST'],
   authLevel: 'anonymous',
   handler: async (request, context) => {
+    const start = Date.now()
+    const method = request.method
+
+    function respond(status, body, teacherId) {
+      logRequest(context, { endpoint: 'questions', method, status, durationMs: Date.now() - start, teacherId })
+      return { status, jsonBody: body }
+    }
+
     try {
-      if (request.method === 'GET') {
-        const { resources } = await container.items.readAll().fetchAll();
-        return { status: 200, jsonBody: resources };
+      if (method === 'GET') {
+        const teacherId = new URL(request.url).searchParams.get('teacherId');
+
+        if (!teacherId || !teacherId.trim()) {
+          return respond(400, { error: 'teacherId is required' })
+        }
+
+        const { resources } = await container.items.query({
+          query: 'SELECT * FROM c WHERE c.teacherId = @teacherId',
+          parameters: [{ name: '@teacherId', value: teacherId.trim() }]
+        }).fetchAll();
+
+        return respond(200, resources, teacherId)
       }
 
-      if (request.method === 'POST') {
+      if (method === 'POST') {
+        const ip = getClientIp(request);
+        if (!rateLimit(`questions:${ip}`, 30, 60000)) {
+          return respond(429, { error: 'Too many requests. Please try again later.' })
+        }
+
+        const contentLength = parseInt(request.headers.get('content-length') || '0', 10);
+        if (contentLength > 65536) {
+          return respond(413, { error: 'Request body too large. Maximum size is 64KB' })
+        }
+
         const body = await request.json();
 
         if (!body || typeof body !== 'object' || Array.isArray(body)) {
-          return { status: 400, jsonBody: { error: 'Request body must be a JSON object' } };
+          return respond(400, { error: 'Request body must be a JSON object' })
         }
 
         const { text, options, correctIndex, topic, teacherId } = body;
-
         const ALLOWED_TOPICS = ['Science', 'History', 'Mathematics', 'English', 'Geography'];
 
         if (typeof text !== 'string' || !text.trim()) {
-          return { status: 400, jsonBody: { error: 'text is required and must be a string' } };
+          return respond(400, { error: 'text is required and must be a string' }, teacherId)
         }
         if (text.trim().length > 500) {
-          return { status: 400, jsonBody: { error: 'text must be 500 characters or fewer' } };
+          return respond(400, { error: 'text must be 500 characters or fewer' }, teacherId)
         }
         if (!Array.isArray(options) || options.length !== 4) {
-          return { status: 400, jsonBody: { error: 'options must be an array of exactly 4 items' } };
+          return respond(400, { error: 'options must be an array of exactly 4 items' }, teacherId)
         }
         if (options.some(o => typeof o !== 'string' || !o.trim())) {
-          return { status: 400, jsonBody: { error: 'each option must be a non-empty string' } };
+          return respond(400, { error: 'each option must be a non-empty string' }, teacherId)
         }
         if (options.some(o => o.trim().length > 200)) {
-          return { status: 400, jsonBody: { error: 'each option must be 200 characters or fewer' } };
+          return respond(400, { error: 'each option must be 200 characters or fewer' }, teacherId)
         }
         if (typeof correctIndex !== 'number' || !Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex > 3) {
-          return { status: 400, jsonBody: { error: 'correctIndex must be an integer between 0 and 3' } };
+          return respond(400, { error: 'correctIndex must be an integer between 0 and 3' }, teacherId)
         }
         if (!ALLOWED_TOPICS.includes(topic)) {
-          return { status: 400, jsonBody: { error: `topic must be one of: ${ALLOWED_TOPICS.join(', ')}` } };
+          return respond(400, { error: `topic must be one of: ${ALLOWED_TOPICS.join(', ')}` }, teacherId)
         }
 
         const question = {
@@ -63,13 +92,15 @@ app.http('questions', {
         };
 
         const { resource } = await container.items.create(question);
-        return { status: 201, jsonBody: resource };
+        return respond(201, resource, question.teacherId)
       }
 
-      return { status: 405, jsonBody: { error: 'Method not allowed' } };
+      return respond(405, { error: 'Method not allowed' })
 
     } catch (err) {
-      return { status: 500, jsonBody: { error: err.message } };
+      context.log.error('questions error:', err.message);
+      logRequest(context, { endpoint: 'questions', method, status: 500, durationMs: Date.now() - start })
+      return { status: 500, jsonBody: { error: 'An unexpected error occurred' } };
     }
   }
 });
