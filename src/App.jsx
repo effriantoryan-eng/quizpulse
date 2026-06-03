@@ -1,12 +1,13 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import Home from './pages/Home'
+import DemoGallery from './pages/DemoGallery'
 import CreateQuestion from './pages/teacher/CreateQuestion'
 import QuestionBank from './pages/teacher/QuestionBank'
 import BuildQuiz from './pages/teacher/BuildQuiz'
 import SendQuiz from './pages/teacher/SendQuiz'
-import TakeQuiz from './pages/student/TakeQuiz'
-import Completion from './pages/student/Completion'
 import Analytics from './pages/teacher/Analytics'
+import QuizHistory from './pages/teacher/QuizHistory'
 import DemoNav from './components/DemoNav'
 
 function ProtectedRoute({ children }) {
@@ -28,14 +29,14 @@ function AppRoutes() {
     <>
       <DemoNav />
       <Routes>
-        <Route path="/" element={<ProtectedRoute><CreateQuestion /></ProtectedRoute>} />
+        <Route path="/" element={<Home />} />
+        <Route path="/demo" element={<DemoGallery />} />
         <Route path="/teacher/create" element={<ProtectedRoute><CreateQuestion /></ProtectedRoute>} />
         <Route path="/teacher/bank" element={<ProtectedRoute><QuestionBank /></ProtectedRoute>} />
         <Route path="/teacher/build" element={<ProtectedRoute><BuildQuiz /></ProtectedRoute>} />
         <Route path="/teacher/send" element={<ProtectedRoute><SendQuiz /></ProtectedRoute>} />
+        <Route path="/teacher/quizzes" element={<ProtectedRoute><QuizHistory /></ProtectedRoute>} />
         <Route path="/teacher/analytics/:quizId" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-        <Route path="/student/quiz/:id" element={<TakeQuiz />} />
-        <Route path="/student/done" element={<Completion />} />
       </Routes>
     </>
   )

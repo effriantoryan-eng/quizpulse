@@ -1,43 +1,31 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-
 import API_BASE from '../../api'
 
+const PRESET_CLASSES = [
+  { id: 'yr9-sci',  name: 'Year 9 Science',  students: 28, topic: 'Science'     },
+  { id: 'yr10-mth', name: 'Year 10 Maths',   students: 25, topic: 'Mathematics' },
+  { id: 'yr7-eng',  name: 'Year 7 English',  students: 22, topic: 'English'     },
+]
+
 const TOPIC_COLORS = {
-  Science: { bg: '#E1F5EE', color: '#085041' },
-  History: { bg: '#FAEEDA', color: '#633806' },
+  Science:     { bg: '#E1F5EE', color: '#085041' },
   Mathematics: { bg: '#E6F1FB', color: '#0C447C' },
+  English:     { bg: '#FEF3E2', color: '#7A4100' },
 }
 
 function SendQuiz() {
   const { teacherId } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
-  const routerState = location.state || {}
-  const { quizName = '', questionIds = [] } = routerState
+  const { quizName = '', questionIds = [], questions = [] } = location.state || {}
 
-  const [classes, setClasses] = useState([])
-  const [selectedClasses, setSelectedClasses] = useState([])
-  const [timing, setTiming] = useState('now')
+  const [selectedClasses, setSelectedClasses] = useState([PRESET_CLASSES[0].id])
   const [sending, setSending] = useState(false)
-  const [sentQuizId, setSentQuizId] = useState(null)
+  const [simulatingMsg, setSimulatingMsg] = useState('')
+  const [sentResult, setSentResult] = useState(null) // { quizId, generated }
   const [error, setError] = useState(null)
-
-  useEffect(() => {
-    async function fetchClasses() {
-      try {
-        const res = await fetch(`${API_BASE}/classes`)
-        if (!res.ok) return
-        const data = await res.json()
-        setClasses(data)
-        if (data.length > 0) setSelectedClasses([data[0].id])
-      } catch {
-        // silently fail — class list stays empty
-      }
-    }
-    fetchClasses()
-  }, [])
 
   if (!quizName || questionIds.length === 0) {
     return (
@@ -62,7 +50,7 @@ function SendQuiz() {
     )
   }
 
-  const totalStudents = classes
+  const totalStudents = PRESET_CLASSES
     .filter(c => selectedClasses.includes(c.id))
     .reduce((sum, c) => sum + c.students, 0)
 
@@ -70,7 +58,9 @@ function SendQuiz() {
     setError(null)
     setSending(true)
     try {
-      const res = await fetch(`${API_BASE}/quizzes`, {
+      // 1. Save the quiz
+      setSimulatingMsg('Saving quiz…')
+      const quizRes = await fetch(`${API_BASE}/quizzes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -83,19 +73,31 @@ function SendQuiz() {
           sentAt: new Date().toISOString(),
         }),
       })
-      if (!res.ok) throw new Error(`Server error ${res.status}`)
-      const quiz = await res.json()
-      setSentQuizId(quiz.id)
+      if (!quizRes.ok) throw new Error(`Quiz save failed (${quizRes.status})`)
+      const quiz = await quizRes.json()
+
+      // 2. Simulate responses server-side
+      setSimulatingMsg(`Simulating ${totalStudents} student responses…`)
+      const simRes = await fetch(`${API_BASE}/simulate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          quizId: quiz.id,
+          questions: questions.map(q => ({ id: q.id, optionCount: q.options?.length ?? 4 })),
+          classSize: totalStudents,
+        }),
+      })
+      if (!simRes.ok) throw new Error(`Simulation failed (${simRes.status})`)
+      const sim = await simRes.json()
+
+      setSentResult({ quizId: quiz.id, generated: sim.generated })
     } catch (err) {
       setError(err.message)
     } finally {
       setSending(false)
+      setSimulatingMsg('')
     }
   }
-
-  const studentLink = sentQuizId
-    ? `${window.location.origin}/student/quiz/${sentQuizId}`
-    : null
 
   return (
     <div style={{ maxWidth: 480, margin: '0 auto', padding: '24px' }}>
@@ -110,32 +112,28 @@ function SendQuiz() {
         </div>
       </div>
 
-      {sentQuizId ? (
+      {sentResult ? (
         /* Success state */
-        <div style={{ background: '#E1F5EE', border: '1px solid #085041', borderRadius: '10px', padding: '20px' }}>
+        <div style={{ background: '#E1F5EE', border: '1px solid #1a7a5e', borderRadius: '10px', padding: '24px' }}>
+          <div style={{ fontSize: '22px', marginBottom: '10px' }}>🎉</div>
           <div style={{ fontSize: '16px', fontWeight: '600', color: '#085041', marginBottom: '8px' }}>Quiz sent!</div>
-          <div style={{ fontSize: '13px', color: '#085041', marginBottom: '14px' }}>
-            Share this link with your students:
+          <div style={{ fontSize: '13px', color: '#085041', marginBottom: '6px' }}>
+            <strong>{sentResult.generated}</strong> simulated responses received.
           </div>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <input
-              readOnly
-              value={studentLink}
-              style={{ flex: 1, padding: '8px 10px', fontSize: '12px', border: '1px solid #085041', borderRadius: '6px', background: 'white', color: '#333' }}
-              onFocus={e => e.target.select()}
-            />
-            <button
-              onClick={() => navigator.clipboard.writeText(studentLink)}
-              style={{ padding: '8px 12px', background: '#085041', color: 'white', border: 'none', borderRadius: '6px', fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap' }}
-            >
-              Copy
-            </button>
+          <div style={{ fontSize: '12px', color: '#3a7a65', marginBottom: '20px' }}>
+            Responses were automatically generated to simulate a real class submission.
           </div>
           <button
-            onClick={() => navigate(`/teacher/analytics/${sentQuizId}`)}
-            style={{ width: '100%', marginTop: '14px', padding: '10px', background: 'white', color: '#085041', border: '1px solid #085041', borderRadius: '8px', fontSize: '13px', cursor: 'pointer' }}
+            onClick={() => navigate(`/teacher/analytics/${sentResult.quizId}`)}
+            style={{ width: '100%', padding: '11px', background: '#085041', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}
           >
             View analytics →
+          </button>
+          <button
+            onClick={() => navigate('/teacher/quizzes')}
+            style={{ width: '100%', marginTop: '8px', padding: '11px', background: 'white', color: '#085041', border: '1px solid #085041', borderRadius: '8px', fontSize: '14px', cursor: 'pointer' }}
+          >
+            All quizzes
           </button>
         </div>
       ) : (
@@ -143,7 +141,7 @@ function SendQuiz() {
           {/* Class selector */}
           <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: '#888', marginBottom: '10px' }}>Send to class</div>
 
-          {classes.map(c => {
+          {PRESET_CLASSES.map(c => {
             const isSelected = selectedClasses.includes(c.id)
             const topicStyle = TOPIC_COLORS[c.topic] || { bg: '#EEEDFE', color: '#3C3489' }
             return (
@@ -151,16 +149,11 @@ function SendQuiz() {
                 key={c.id}
                 onClick={() => toggleClass(c.id)}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  padding: '12px 14px',
-                  marginBottom: '8px',
+                  display: 'flex', alignItems: 'center', gap: '12px',
+                  padding: '12px 14px', marginBottom: '8px',
                   border: `${isSelected ? '2px' : '1px'} solid ${isSelected ? '#534AB7' : '#e0e0e0'}`,
-                  borderRadius: '8px',
-                  background: isSelected ? '#EEEDFE11' : 'white',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s'
+                  borderRadius: '8px', background: isSelected ? '#EEEDFE11' : 'white',
+                  cursor: 'pointer', transition: 'all 0.15s',
                 }}
               >
                 <div style={{
@@ -168,7 +161,7 @@ function SendQuiz() {
                   border: `1px solid ${isSelected ? '#534AB7' : '#ccc'}`,
                   background: isSelected ? '#534AB7' : 'white',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0, fontSize: '12px', color: 'white'
+                  flexShrink: 0, fontSize: '12px', color: 'white',
                 }}>
                   {isSelected ? '✓' : ''}
                 </div>
@@ -181,36 +174,32 @@ function SendQuiz() {
             )
           })}
 
-          {/* Timing */}
+          {/* Timing — send now only; schedule is post-MVP */}
           <div style={{ borderTop: '1px solid #eee', margin: '20px 0' }}></div>
-          <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: '#888', marginBottom: '10px' }}>When to send</div>
-
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '24px' }}>
-            <div
-              onClick={() => setTiming('now')}
-              style={{
-                padding: '14px', textAlign: 'center', borderRadius: '8px', cursor: 'pointer',
-                border: `${timing === 'now' ? '2px' : '1px'} solid ${timing === 'now' ? '#534AB7' : '#e0e0e0'}`,
-                background: timing === 'now' ? '#EEEDFE22' : 'white'
-              }}
-            >
+            <div style={{
+              padding: '14px', textAlign: 'center', borderRadius: '8px',
+              border: '2px solid #534AB7', background: '#EEEDFE22',
+            }}>
               <div style={{ fontSize: '20px', marginBottom: '6px' }}>📤</div>
-              <div style={{ fontSize: '13px', fontWeight: '500', color: timing === 'now' ? '#534AB7' : '#333' }}>Send now</div>
+              <div style={{ fontSize: '13px', fontWeight: '500', color: '#534AB7' }}>Send now</div>
             </div>
-            <div
-              onClick={() => setTiming('later')}
-              style={{
-                padding: '14px', textAlign: 'center', borderRadius: '8px', cursor: 'not-allowed',
-                border: '1px solid #e0e0e0',
-                background: '#fafafa',
-                opacity: 0.5
-              }}
-            >
+            <div style={{
+              padding: '14px', textAlign: 'center', borderRadius: '8px',
+              border: '1px solid #e0e0e0', background: '#fafafa', opacity: 0.5,
+            }}>
               <div style={{ fontSize: '20px', marginBottom: '6px' }}>🕐</div>
               <div style={{ fontSize: '13px', fontWeight: '500', color: '#aaa' }}>Schedule</div>
               <div style={{ fontSize: '11px', color: '#bbb' }}>Coming soon</div>
             </div>
           </div>
+
+          {sending && simulatingMsg && (
+            <div style={{ padding: '10px 14px', background: '#EEEDFE', border: '1px solid #c5c0f0', borderRadius: '8px', fontSize: '13px', color: '#534AB7', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⏳</span>
+              {simulatingMsg}
+            </div>
+          )}
 
           {error && (
             <div style={{ padding: '10px 14px', background: '#fdecea', border: '1px solid #c0392b', borderRadius: '8px', fontSize: '13px', color: '#c0392b', marginBottom: '16px' }}>
@@ -218,22 +207,22 @@ function SendQuiz() {
             </div>
           )}
 
-          {/* Send button */}
           <button
             disabled={selectedClasses.length === 0 || sending}
             style={{
               width: '100%', padding: '12px',
               background: selectedClasses.length === 0 || sending ? '#ccc' : '#534AB7',
               color: 'white', border: 'none', borderRadius: '8px',
-              fontSize: '15px', fontWeight: '500', cursor: selectedClasses.length === 0 || sending ? 'not-allowed' : 'pointer'
+              fontSize: '15px', fontWeight: '500',
+              cursor: selectedClasses.length === 0 || sending ? 'not-allowed' : 'pointer',
             }}
             onClick={handleSend}
           >
-            {sending ? 'Sending…' : `Send to ${totalStudents} students →`}
+            {sending ? 'Working…' : `Send to ${totalStudents} students →`}
           </button>
 
           <p style={{ fontSize: '12px', color: '#aaa', textAlign: 'center', marginTop: '10px' }}>
-            Students receive a link to the quiz. No grade is recorded.
+            Responses will be simulated automatically so you can view analytics right away.
           </p>
         </>
       )}
