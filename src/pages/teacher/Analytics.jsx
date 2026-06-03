@@ -73,7 +73,7 @@ function Analytics() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '28px' }}>
         <button
-          onClick={() => navigate('/teacher/send')}
+          onClick={() => navigate('/teacher/quizzes')}
           style={{ background: 'none', border: '1px solid #e0e0e0', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', fontSize: '13px', color: '#666' }}
         >
           ← Back

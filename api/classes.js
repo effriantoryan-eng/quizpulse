@@ -2,9 +2,9 @@ const { app } = require('@azure/functions');
 const { logRequest } = require('./logger');
 
 const CLASSES = [
-  { id: 'yr9-sci-p3', name: 'Year 9 Science — Period 3', students: 28, topic: 'Science' },
-  { id: 'yr9-sci-p5', name: 'Year 9 Science — Period 5', students: 26, topic: 'Science' },
-  { id: 'yr10-bio-p2', name: 'Year 10 Biology — Period 2', students: 24, topic: 'Science' },
+  { id: 'yr9-sci',  name: 'Year 9 Science',  students: 28, topic: 'Science'     },
+  { id: 'yr10-mth', name: 'Year 10 Maths',   students: 25, topic: 'Mathematics' },
+  { id: 'yr7-eng',  name: 'Year 7 English',  students: 22, topic: 'English'     },
 ];
 
 app.http('classes', {

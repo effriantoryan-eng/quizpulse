@@ -178,7 +178,7 @@ function BuildQuiz() {
           <button
             disabled={selected.length === 0 || !quizName.trim()}
             style={{ width: '100%', marginTop: '16px', padding: '12px', background: selected.length === 0 || !quizName.trim() ? '#ccc' : '#534AB7', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '500', cursor: selected.length === 0 || !quizName.trim() ? 'not-allowed' : 'pointer' }}
-            onClick={() => navigate('/teacher/send', { state: { quizName, questionIds: selected.map(q => q.id) } })}
+            onClick={() => navigate('/teacher/send', { state: { quizName, questionIds: selected.map(q => q.id), questions: selected } })}
           >
             Save & go to send →
           </button>
