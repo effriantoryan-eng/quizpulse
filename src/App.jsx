@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { AuthProvider } from './contexts/AuthContext'
 import Home from './pages/Home'
 import DemoGallery from './pages/DemoGallery'
 import CreateQuestion from './pages/teacher/CreateQuestion'
@@ -10,20 +10,6 @@ import Analytics from './pages/teacher/Analytics'
 import QuizHistory from './pages/teacher/QuizHistory'
 import DemoNav from './components/DemoNav'
 
-function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth()
-  const isLocalDev = window.location.hostname === 'localhost'
-
-  if (loading) return null
-
-  if (!user && !isLocalDev) {
-    window.location.href = `/.auth/login/aad?post_login_redirect_uri=${encodeURIComponent(window.location.pathname)}`
-    return null
-  }
-
-  return children
-}
-
 function AppRoutes() {
   return (
     <>
@@ -31,12 +17,12 @@ function AppRoutes() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/demo" element={<DemoGallery />} />
-        <Route path="/teacher/create" element={<ProtectedRoute><CreateQuestion /></ProtectedRoute>} />
-        <Route path="/teacher/bank" element={<ProtectedRoute><QuestionBank /></ProtectedRoute>} />
-        <Route path="/teacher/build" element={<ProtectedRoute><BuildQuiz /></ProtectedRoute>} />
-        <Route path="/teacher/send" element={<ProtectedRoute><SendQuiz /></ProtectedRoute>} />
-        <Route path="/teacher/quizzes" element={<ProtectedRoute><QuizHistory /></ProtectedRoute>} />
-        <Route path="/teacher/analytics/:quizId" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+        <Route path="/teacher/create" element={<CreateQuestion />} />
+        <Route path="/teacher/bank" element={<QuestionBank />} />
+        <Route path="/teacher/build" element={<BuildQuiz />} />
+        <Route path="/teacher/send" element={<SendQuiz />} />
+        <Route path="/teacher/quizzes" element={<QuizHistory />} />
+        <Route path="/teacher/analytics/:quizId" element={<Analytics />} />
       </Routes>
     </>
   )
