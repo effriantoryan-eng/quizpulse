@@ -98,7 +98,7 @@ app.http('questions', {
       return respond(405, { error: 'Method not allowed' })
 
     } catch (err) {
-      context.log.error('questions error:', err.message);
+      context.error('questions error:', err.message);
       logRequest(context, { endpoint: 'questions', method, status: 500, durationMs: Date.now() - start })
       return { status: 500, jsonBody: { error: 'An unexpected error occurred' } };
     }
@@ -189,7 +189,7 @@ app.http('questionById', {
       return respond(405, { error: 'Method not allowed' })
 
     } catch (err) {
-      context.log.error('questionById error:', err.message)
+      context.error('questionById error:', err.message)
       logRequest(context, { endpoint: 'questions/:id', method, status: 500, durationMs: Date.now() - start })
       return { status: 500, jsonBody: { error: 'An unexpected error occurred' } }
     }
