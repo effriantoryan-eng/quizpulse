@@ -110,7 +110,7 @@ app.http('responses', {
       return respond(405, { error: 'Method not allowed' })
 
     } catch (err) {
-      context.log.error('responses error:', err.message);
+      context.error('responses error:', err.message);
       logRequest(context, { endpoint: 'responses', method, status: 500, durationMs: Date.now() - start })
       return { status: 500, jsonBody: { error: 'An unexpected error occurred' } };
     }

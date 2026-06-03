@@ -17,11 +17,11 @@ function logRequest(context, { endpoint, method, status, durationMs, teacherId }
   }
 
   if (status >= 500) {
-    context.log.error('request', JSON.stringify(entry))
+    context.error('request', JSON.stringify(entry))
   } else if (status >= 400) {
-    context.log.warn('request', JSON.stringify(entry))
+    context.warn('request', JSON.stringify(entry))
   } else {
-    context.log.info('request', JSON.stringify(entry))
+    context.log('request', JSON.stringify(entry))
   }
 }
 

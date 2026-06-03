@@ -46,7 +46,7 @@ app.http('getQuizById', {
 
       return respond(200, quiz, teacherId)
     } catch (err) {
-      context.log.error('quizzes error:', err.message);
+      context.error('quizzes error:', err.message);
       logRequest(context, { endpoint: 'quizzes/:id', method: 'GET', status: 500, durationMs: Date.now() - start })
       return { status: 500, jsonBody: { error: 'An unexpected error occurred' } };
     }
@@ -143,7 +143,7 @@ app.http('quizzes', {
       return respond(405, { error: 'Method not allowed' })
 
     } catch (err) {
-      context.log.error('quizzes error:', err.message);
+      context.error('quizzes error:', err.message);
       logRequest(context, { endpoint: 'quizzes', method, status: 500, durationMs: Date.now() - start })
       return { status: 500, jsonBody: { error: 'An unexpected error occurred' } };
     }
