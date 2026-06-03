@@ -1,7 +1,10 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 function Completion() {
   const navigate = useNavigate()
+  const { state } = useLocation()
+  const quizName = state?.quizName || 'this quiz'
+  const questionCount = state?.questionCount ?? '—'
 
   return (
     <div style={{ maxWidth: 380, margin: '0 auto', padding: '48px 24px', textAlign: 'center' }}>
@@ -14,7 +17,7 @@ function Completion() {
       <div style={{ fontSize: '22px', fontWeight: '500', color: '#1a1a1a', marginBottom: '8px' }}>All done!</div>
       <div style={{ fontSize: '14px', color: '#666', lineHeight: '1.6', marginBottom: '28px' }}>
         You completed<br />
-        <strong style={{ color: '#534AB7' }}>Week 4 — Photosynthesis</strong>
+        <strong style={{ color: '#534AB7' }}>{quizName}</strong>
       </div>
 
       {/* Stats card */}
@@ -22,11 +25,7 @@ function Completion() {
         <div style={{ fontSize: '11px', color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px' }}>This quiz</div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#555', marginBottom: '8px' }}>
           <span>Questions answered</span>
-          <span style={{ fontWeight: '500', color: '#1a1a1a' }}>2 / 2</span>
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#555' }}>
-          <span>Subject</span>
-          <span style={{ fontWeight: '500', color: '#534AB7' }}>Science</span>
+          <span style={{ fontWeight: '500', color: '#1a1a1a' }}>{questionCount} / {questionCount}</span>
         </div>
       </div>
 

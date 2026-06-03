@@ -1,14 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 
 import API_BASE from '../../api'
-
-const CLASSES = [
-  { id: 'yr9-sci-p3', name: 'Year 9 Science — Period 3', students: 28, topic: 'Science' },
-  { id: 'yr9-sci-p5', name: 'Year 9 Science — Period 5', students: 26, topic: 'Science' },
-  { id: 'yr10-bio-p2', name: 'Year 10 Biology — Period 2', students: 24, topic: 'Science' },
-]
 
 const TOPIC_COLORS = {
   Science: { bg: '#E1F5EE', color: '#085041' },
@@ -23,11 +17,27 @@ function SendQuiz() {
   const routerState = location.state || {}
   const { quizName = '', questionIds = [] } = routerState
 
-  const [selectedClasses, setSelectedClasses] = useState([CLASSES[0].id])
+  const [classes, setClasses] = useState([])
+  const [selectedClasses, setSelectedClasses] = useState([])
   const [timing, setTiming] = useState('now')
   const [sending, setSending] = useState(false)
   const [sentQuizId, setSentQuizId] = useState(null)
   const [error, setError] = useState(null)
+
+  useEffect(() => {
+    async function fetchClasses() {
+      try {
+        const res = await fetch(`${API_BASE}/classes`)
+        if (!res.ok) return
+        const data = await res.json()
+        setClasses(data)
+        if (data.length > 0) setSelectedClasses([data[0].id])
+      } catch {
+        // silently fail — class list stays empty
+      }
+    }
+    fetchClasses()
+  }, [])
 
   if (!quizName || questionIds.length === 0) {
     return (
@@ -52,7 +62,7 @@ function SendQuiz() {
     )
   }
 
-  const totalStudents = CLASSES
+  const totalStudents = classes
     .filter(c => selectedClasses.includes(c.id))
     .reduce((sum, c) => sum + c.students, 0)
 
@@ -68,6 +78,7 @@ function SendQuiz() {
           name: quizName,
           questionIds,
           classIds: selectedClasses,
+          classSize: totalStudents,
           status: 'sent',
           sentAt: new Date().toISOString(),
         }),
@@ -132,7 +143,7 @@ function SendQuiz() {
           {/* Class selector */}
           <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: '#888', marginBottom: '10px' }}>Send to class</div>
 
-          {CLASSES.map(c => {
+          {classes.map(c => {
             const isSelected = selectedClasses.includes(c.id)
             const topicStyle = TOPIC_COLORS[c.topic] || { bg: '#EEEDFE', color: '#3C3489' }
             return (
