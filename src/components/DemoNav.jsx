@@ -12,8 +12,6 @@ const STATIC_PAGES = [
 export default function DemoNav() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  const { teacherId } = useAuth()
-
   const pages = [
     ...STATIC_PAGES,
     { label: '🖼 Preview', path: '/demo' },
