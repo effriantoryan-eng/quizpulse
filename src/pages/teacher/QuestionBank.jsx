@@ -11,6 +11,10 @@ const TOPIC_COLORS = {
   Geography: { bg: '#EEEDFE', color: '#3C3489' },
 }
 
+const ALLOWED_TOPICS = ['Science', 'History', 'Mathematics', 'English', 'Geography']
+
+const BLANK_FORM = { text: '', options: ['', '', '', ''], correctIndex: 0, topic: 'Science' }
+
 function QuestionBank() {
   const { teacherId } = useAuth()
   const [questions, setQuestions] = useState([])
@@ -18,6 +22,10 @@ function QuestionBank() {
   const [selected, setSelected] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [editingId, setEditingId] = useState(null)
+  const [editForm, setEditForm] = useState(BLANK_FORM)
+  const [saving, setSaving] = useState(false)
+  const [editError, setEditError] = useState(null)
 
   useEffect(() => {
     if (!teacherId) return
@@ -37,15 +45,58 @@ function QuestionBank() {
   }, [teacherId])
 
   const topics = ['All', ...new Set(questions.map(q => q.topic))]
-
-  const filtered = filter === 'All'
-    ? questions
-    : questions.filter(q => q.topic === filter)
+  const filtered = filter === 'All' ? questions : questions.filter(q => q.topic === filter)
 
   function toggleSelect(id) {
-    setSelected(prev =>
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-    )
+    setSelected(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id])
+  }
+
+  function startEdit(q, e) {
+    e.stopPropagation()
+    setEditingId(q.id)
+    setEditForm({ text: q.text, options: [...q.options], correctIndex: q.correctIndex, topic: q.topic })
+    setEditError(null)
+  }
+
+  function cancelEdit() {
+    setEditingId(null)
+    setEditError(null)
+  }
+
+  async function saveEdit(id) {
+    setEditError(null)
+    setSaving(true)
+    try {
+      const res = await fetch(`${API_BASE}/questions/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...editForm, teacherId }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || `Server error ${res.status}`)
+      }
+      const updated = await res.json()
+      setQuestions(prev => prev.map(q => q.id === id ? updated : q))
+      setEditingId(null)
+    } catch (err) {
+      setEditError(err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function deleteQuestion(id, e) {
+    e.stopPropagation()
+    if (!window.confirm('Delete this question? This cannot be undone.')) return
+    try {
+      const res = await fetch(`${API_BASE}/questions/${id}?teacherId=${teacherId}`, { method: 'DELETE' })
+      if (!res.ok && res.status !== 204) throw new Error(`Server error ${res.status}`)
+      setQuestions(prev => prev.filter(q => q.id !== id))
+      setSelected(prev => prev.filter(i => i !== id))
+    } catch (err) {
+      alert(`Failed to delete: ${err.message}`)
+    }
   }
 
   if (loading) return <div style={{ padding: '24px', color: '#888' }}>Loading questions...</div>
@@ -85,6 +136,75 @@ function QuestionBank() {
           {filtered.map(q => {
             const topicStyle = TOPIC_COLORS[q.topic] || { bg: '#EEEDFE', color: '#3C3489' }
             const isSelected = selected.includes(q.id)
+            const isEditing = editingId === q.id
+
+            if (isEditing) {
+              return (
+                <div key={q.id} style={{ padding: '16px', marginBottom: '10px', border: '2px solid #534AB7', borderRadius: '10px', background: '#FAFAFE' }}>
+                  <div style={{ marginBottom: '10px' }}>
+                    <label style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#888', display: 'block', marginBottom: '4px' }}>Question</label>
+                    <textarea
+                      value={editForm.text}
+                      onChange={e => setEditForm(f => ({ ...f, text: e.target.value }))}
+                      rows={2}
+                      style={{ width: '100%', padding: '8px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ddd', boxSizing: 'border-box', resize: 'vertical' }}
+                    />
+                  </div>
+                  <div style={{ marginBottom: '10px' }}>
+                    <label style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#888', display: 'block', marginBottom: '4px' }}>Options (select correct answer)</label>
+                    {editForm.options.map((opt, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                        <input
+                          type="radio"
+                          name={`correct-${q.id}`}
+                          checked={editForm.correctIndex === i}
+                          onChange={() => setEditForm(f => ({ ...f, correctIndex: i }))}
+                          style={{ accentColor: '#534AB7' }}
+                        />
+                        <input
+                          value={opt}
+                          onChange={e => {
+                            const opts = [...editForm.options]
+                            opts[i] = e.target.value
+                            setEditForm(f => ({ ...f, options: opts }))
+                          }}
+                          style={{ flex: 1, padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: `1px solid ${editForm.correctIndex === i ? '#534AB7' : '#ddd'}` }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ marginBottom: '12px' }}>
+                    <label style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#888', display: 'block', marginBottom: '4px' }}>Topic</label>
+                    <select
+                      value={editForm.topic}
+                      onChange={e => setEditForm(f => ({ ...f, topic: e.target.value }))}
+                      style={{ padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ddd' }}
+                    >
+                      {ALLOWED_TOPICS.map(t => <option key={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  {editError && (
+                    <div style={{ fontSize: '12px', color: '#c0392b', marginBottom: '10px' }}>{editError}</div>
+                  )}
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={() => saveEdit(q.id)}
+                      disabled={saving}
+                      style={{ padding: '7px 16px', background: saving ? '#ccc' : '#534AB7', color: 'white', border: 'none', borderRadius: '6px', fontSize: '13px', cursor: saving ? 'not-allowed' : 'pointer' }}
+                    >
+                      {saving ? 'Saving…' : 'Save'}
+                    </button>
+                    <button
+                      onClick={cancelEdit}
+                      style={{ padding: '7px 16px', background: 'white', color: '#555', border: '1px solid #ddd', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )
+            }
+
             return (
               <div
                 key={q.id}
@@ -110,6 +230,20 @@ function QuestionBank() {
                     <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '20px', background: topicStyle.bg, color: topicStyle.color }}>{q.topic}</span>
                     <span style={{ fontSize: '11px', color: '#aaa' }}>{q.options?.length || 4} options</span>
                   </div>
+                </div>
+                <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                  <button
+                    onClick={e => startEdit(q, e)}
+                    style={{ padding: '4px 10px', fontSize: '12px', background: 'white', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer', color: '#555' }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={e => deleteQuestion(q.id, e)}
+                    style={{ padding: '4px 10px', fontSize: '12px', background: 'white', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer', color: '#c0392b' }}
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             )

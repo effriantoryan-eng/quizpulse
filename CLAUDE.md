@@ -238,18 +238,18 @@ role on `quizpulse-kv`. The raw key is never stored in Function App configuratio
 | Question Bank | ✅ Working | Backend-filtered by authenticated teacherId |
 | Build Quiz | ✅ Working | Loads real questions from API, reorder + remove |
 | Send Quiz | ✅ Working | POSTs quiz to Cosmos DB, returns shareable student link |
-| Take Quiz | ✅ Working | Loads real quiz by ID, submits responses to DB |
-| Completion screen | ✅ Working | No score shown, participation only |
-| Analytics | ✅ Working | Real response data, per-question bar chart |
+| Take Quiz | ✅ Working | Fetches quiz first, uses quiz.teacherId for questions fetch |
+| Completion screen | ✅ Working | Reads real quiz name and question count from router state |
+| Analytics | ✅ Working | Fetches quiz first, uses quiz.teacherId, filters to quiz.questionIds |
 | Teacher auth (Entra ID) | ✅ Working | Protects /teacher/* routes, stable userId |
 | DemoNav | ✅ Working | Fetches most recent quizId dynamically |
 | App Insights logging | ⚠️ Partial | Code wired — set APPLICATIONINSIGHTS_CONNECTION_STRING to activate |
-| Class management | ⚠️ Partial | Class list hardcoded in SendQuiz — no real /api/classes endpoint yet |
+| Class management | ✅ Working | GET /api/classes endpoint live; SendQuiz fetches dynamically |
 | Student auth | ❌ Post-MVP | Anonymous sessionStorage UUID only |
 | Push notifications | ❌ Post-MVP | Azure Notification Hubs — not started |
 | Schedule quiz | ❌ Post-MVP | UI placeholder exists, backend not implemented |
 | Quiz link expiry | ❌ Post-MVP | No closedAt field or expiry logic yet |
-| Edit/delete questions | ❌ Not done | PUT/DELETE /questions/:id not yet implemented |
+| Edit/delete questions | ✅ Working | PUT/DELETE /api/questions/:id implemented; edit/delete UI in QuestionBank |
 | Admin & rostering | ❌ Post-MVP | — |
 | LMS integration | ❌ Post-MVP | — |
 
@@ -260,11 +260,7 @@ role on `quizpulse-kv`. The raw key is never stored in Function App configuratio
 logging calls exist in `logger.js` but telemetry is not flowing. Set this in the Azure portal
 (Function App → Configuration) to activate.
 
-### 2. Class list hardcoded in SendQuiz
-`SendQuiz.jsx` uses a hardcoded array of classes. A `GET /api/classes` endpoint does not yet exist.
-This means student counts and class IDs stored on quiz documents are not real.
-
-### 3. Rate limiter is per-instance, not global
+### 2. Rate limiter is per-instance, not global
 `rateLimit.js` uses an in-memory Map. State is not shared across Function App scale-out replicas.
 Fine for MVP; upgrade to Azure API Management for production scale.
 
@@ -272,39 +268,9 @@ Fine for MVP; upgrade to Azure API Management for production scale.
 The Consumption plan does not support static outbound IPs (VNet integration requires Flex or Premium).
 Deferred until a plan upgrade is justified.
 
-## Next priorities (Sprint 1 — complete the core loop)
+## Next priorities
 
-These are the only remaining tasks to make the app fully functional end-to-end.
-Work them in this order — each one unblocks the next.
-
-1. **Wire BuildQuiz to real questions** (`BuildQuiz.jsx`)
-   - On mount, call `GET /api/questions` and replace hardcoded list
-   - Pass selected `questionIds` + quiz name to SendQuiz via React Router `state`
-
-2. **Wire SendQuiz to POST a real quiz** (`SendQuiz.jsx`)
-   - On send, call `POST /api/quizzes` with `{ name, questionIds, classIds, classSize, status: "sent", sentAt }`
-   - On success, display returned quiz `id` as shareable student link: `/student/quiz/:id`
-
-3. **Wire TakeQuiz to load a real quiz by ID** (`TakeQuiz.jsx`)
-   - On mount, read `:id` from URL, call `GET /api/quizzes/:id` to get `questionIds`
-   - Call `GET /api/questions`, filter to those IDs, render real questions
-   - Confirm the `quizId` passed to Completion for `POST /api/responses` is the real UUID
-
-4. **Fix DemoNav analytics link** (`DemoNav.jsx`)
-   - Call `GET /api/quizzes` on mount, use most recent quiz `id` for Analytics link
-   - Disable button gracefully when no quizzes exist yet
-
-## Sprint 2 — reliability
-
-5. Add empty + error states to BuildQuiz and TakeQuiz (no questions saved, quiz not found, loading)
-6. Verify `quizId` and `questionId` values flow correctly from TakeQuiz → Completion → Analytics
-7. Store `classSize` on quiz document at send time so Analytics can show "X / Y responded"
-
-## Sprint 3 — stabilise for real use
-
-8. Activate App Insights: set `APPLICATIONINSIGHTS_CONNECTION_STRING` in Function App config
-9. Create `GET /api/classes` Function returning static class list — remove hardcoded data from SendQuiz
-10. Add edit/delete question support (`PUT /questions/:id`, `DELETE /questions/:id`)
+1. Activate App Insights: set `APPLICATIONINSIGHTS_CONNECTION_STRING` in Azure portal → quizpulse-api → Configuration (config-only, no code change)
 
 ## Post-MVP features
 

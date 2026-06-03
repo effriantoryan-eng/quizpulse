@@ -12,6 +12,7 @@ function Analytics() {
   const { quizId } = useParams()
   const navigate = useNavigate()
   const [quiz, setQuiz] = useState(null)
+  const [classSize, setClassSize] = useState(null)
   const [questions, setQuestions] = useState([])
   const [responses, setResponses] = useState([])
   const [loading, setLoading] = useState(true)
@@ -20,18 +21,27 @@ function Analytics() {
   useEffect(() => {
     async function fetchData() {
       try {
+        const quizRes = await fetch(`${API_BASE}/quizzes/${quizId}`)
+        if (quizRes.status === 404) throw new Error('Quiz not found')
+        if (!quizRes.ok) throw new Error(`Server error ${quizRes.status}`)
+        const quizData = await quizRes.json()
+
         const [responsesRes, questionsRes] = await Promise.all([
           fetch(`${API_BASE}/responses?quizId=${quizId}`),
-          fetch(`${API_BASE}/questions`)
+          fetch(`${API_BASE}/questions?teacherId=${quizData.teacherId}`)
         ])
 
         if (!responsesRes.ok || !questionsRes.ok) throw new Error('Failed to load data')
 
         const responsesData = await responsesRes.json()
-        const questionsData = await questionsRes.json()
+        const allQuestions = await questionsRes.json()
+        const quizQuestions = quizData.questionIds
+          .map(qid => allQuestions.find(q => q.id === qid))
+          .filter(Boolean)
 
         setResponses(responsesData)
-        setQuestions(questionsData)
+        setQuestions(quizQuestions)
+        setClassSize(quizData.classSize || null)
         setLoading(false)
       } catch (err) {
         setError(err.message)
@@ -77,8 +87,10 @@ function Analytics() {
       {/* Summary card */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '28px' }}>
         <div style={{ background: '#534AB7', borderRadius: '12px', padding: '20px', color: 'white', textAlign: 'center' }}>
-          <div style={{ fontSize: '36px', fontWeight: '600' }}>{totalResponses}</div>
-          <div style={{ fontSize: '13px', opacity: 0.85, marginTop: '4px' }}>Students completed</div>
+          <div style={{ fontSize: '36px', fontWeight: '600' }}>
+            {classSize ? `${totalResponses} / ${classSize}` : totalResponses}
+          </div>
+          <div style={{ fontSize: '13px', opacity: 0.85, marginTop: '4px' }}>Students responded</div>
         </div>
         <div style={{ background: '#EAF3DE', borderRadius: '12px', padding: '20px', color: '#3B6D11', textAlign: 'center' }}>
           <div style={{ fontSize: '36px', fontWeight: '600' }}>{questions.length}</div>

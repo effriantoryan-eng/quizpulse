@@ -20,16 +20,13 @@ function TakeQuiz() {
   useEffect(() => {
     async function load() {
       try {
-        const [quizRes, questionsRes] = await Promise.all([
-          fetch(`${API_BASE}/quizzes/${id}`),
-          fetch(`${API_BASE}/questions`),
-        ])
-
+        const quizRes = await fetch(`${API_BASE}/quizzes/${id}`)
         if (quizRes.status === 404) throw new Error('Quiz not found')
         if (!quizRes.ok) throw new Error(`Server error ${quizRes.status}`)
-        if (!questionsRes.ok) throw new Error(`Server error ${questionsRes.status}`)
-
         const quizData = await quizRes.json()
+
+        const questionsRes = await fetch(`${API_BASE}/questions?teacherId=${quizData.teacherId}`)
+        if (!questionsRes.ok) throw new Error(`Server error ${questionsRes.status}`)
         const allQuestions = await questionsRes.json()
 
         const ordered = quizData.questionIds
@@ -70,7 +67,7 @@ function TakeQuiz() {
       } catch (err) {
         console.error('Failed to save response', err)
       }
-      navigate('/student/done')
+      navigate('/student/done', { state: { quizName: quiz.name, questionCount: questions.length } })
     } else {
       setCurrentIndex(i => i + 1)
       setSelectedOption(null)

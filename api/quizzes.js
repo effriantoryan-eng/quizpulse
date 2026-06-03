@@ -98,7 +98,7 @@ app.http('quizzes', {
           return respond(400, { error: 'Request body must be a JSON object' })
         }
 
-        const { name, questionIds, classIds, teacherId, status, sentAt } = body;
+        const { name, questionIds, classIds, classSize, teacherId, status, sentAt } = body;
         const ALLOWED_STATUSES = ['draft', 'sent', 'scheduled'];
 
         if (typeof name !== 'string' || !name.trim()) {
@@ -129,6 +129,7 @@ app.http('quizzes', {
           name: name.trim(),
           questionIds: questionIds.map(id => id.trim()),
           classIds: Array.isArray(classIds) ? classIds.map(id => String(id).trim().slice(0, 100)) : [],
+          classSize: typeof classSize === 'number' && Number.isInteger(classSize) && classSize >= 0 ? classSize : 0,
           status: status || 'draft',
           sentAt: sentAt || null,
           scheduledFor: null,
