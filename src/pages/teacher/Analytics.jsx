@@ -108,7 +108,6 @@ function Analytics() {
       {questions.map((q, qi) => {
         const counts = getOptionCounts(q.id, q.options.length)
         const total = counts.reduce((a, b) => a + b, 0)
-        const maxCount = Math.max(...counts, 1)
 
         return (
           <div key={q.id} style={{ background: 'white', border: '1px solid #e0e0e0', borderRadius: '12px', padding: '20px', marginBottom: '16px' }}>
@@ -124,7 +123,7 @@ function Analytics() {
               const count = counts[i]
               const percent = total > 0 ? Math.round((count / total) * 100) : 0
               const isCorrect = i === q.correctIndex
-              const barWidth = total > 0 ? (count / maxCount) * 100 : 0
+              const barWidth = percent
 
               return (
                 <div key={i} style={{ marginBottom: '10px' }}>
