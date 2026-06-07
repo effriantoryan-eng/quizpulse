@@ -7,6 +7,9 @@ This is a **teacher-only demo**: teachers create questions, build quizzes, send 
 and view analytics. Student responses are simulated automatically on send — no real student flow exists.
 Student view, push notifications, and other upcoming features are shown as static mockups in the Preview gallery.
 
+The demo is **fully public** — no login required. Any visitor gets a stable `localStorage` UUID as their
+`teacherId`. Their data persists across page refreshes in the same browser but is isolated from all other visitors.
+
 ## Tech stack
 
 | Layer | Technology |
@@ -15,7 +18,7 @@ Student view, push notifications, and other upcoming features are shown as stati
 | Hosting | Azure Static Web Apps (free tier, GitHub CI/CD) |
 | Backend | Azure Functions — Node.js v4 runtime, HTTP-triggered, serverless |
 | Database | Azure Cosmos DB (NoSQL, serverless mode) |
-| Auth | Azure Static Web Apps Easy Auth — Entra ID (Simple mode) |
+| Auth | None — removed. `teacherId` is a `localStorage` UUID per browser |
 | Secret management | Azure Key Vault — Cosmos DB key stored as secret, referenced via managed identity |
 | Logging | Azure Application Insights — structured request logging (active) |
 | Notifications | Azure Notification Hubs (post-MVP, not yet implemented) |
@@ -64,31 +67,33 @@ src/
   pages/
     Home.jsx             — landing page with demo flow overview and CTA buttons
     DemoGallery.jsx      — static mockup gallery (student view, push notifications, etc.)
+    Login.jsx            — DEAD CODE — leftover MSAL login page, not routed, delete in next cleanup
     teacher/
       CreateQuestion.jsx — save questions to Cosmos DB (working)
       QuestionBank.jsx   — load/filter/edit/delete questions (working)
       BuildQuiz.jsx      — assemble quiz from real DB questions (working)
       SendQuiz.jsx       — POST quiz to DB, trigger simulate, show analytics link (working)
       Analytics.jsx      — per-question response breakdown, real data (working)
+      QuizHistory.jsx    — list all sent quizzes, click through to analytics (working)
   components/
-    DemoNav.jsx          — persistent nav bar; Home, teacher flow, Analytics, Preview
-    AuthContext.jsx      — fetches /.auth/me, provides { user, teacherId, loading } via context
-    ProtectedRoute.jsx   — redirects unauthenticated users to Entra ID login on production;
-                           passes through on localhost for local dev
+    DemoNav.jsx          — persistent nav bar; Home, teacher flow, My Quizzes, Preview
+  contexts/
+    AuthContext.jsx      — provides { teacherId } via localStorage UUID; no auth fetch
+  session.js             — localStorage UUID helper (getSessionId); studentId export is dead code
   api.js                 — centralised API base URL; localhost:7071/api locally,
                            direct Function App URL in production (see API routing note below)
-  App.jsx                — main router, all routes, DemoNav + AuthContext rendered globally
+  App.jsx                — main router, all routes rendered directly (no ProtectedRoute)
 api/
   questions.js           — GET/POST /api/questions + PUT/DELETE /api/questions/:id
   quizzes.js             — GET/POST /api/quizzes, GET /api/quizzes/:id
   responses.js           — GET/POST /api/responses
   simulate.js            — POST /api/simulate — server-side bulk response generation
-  classes.js             — GET /api/classes (static preset class list — 3 classes)
+  classes.js             — GET /api/classes — UNUSED by frontend (SendQuiz uses hardcoded PRESET_CLASSES)
   rateLimit.js           — in-memory sliding window rate limiter (per IP, per Function instance)
   logger.js              — structured request logger → Application Insights
   host.json
   local.settings.json    — local Cosmos DB keys (gitignored, never commit)
-staticwebapp.config.json — SPA fallback + auth config + security headers (CSP, HSTS, etc.)
+staticwebapp.config.json — SPA fallback + security headers (no auth rules — routes are fully public)
 ```
 
 ## Demo flow
@@ -99,9 +104,25 @@ staticwebapp.config.json — SPA fallback + auth config + security headers (CSP,
 4. `/teacher/build` — Select questions, name the quiz, proceed to Send
 5. `/teacher/send` — Pick preset class(es), click Send → quiz saved → simulate called → redirect to Analytics
 6. `/teacher/analytics/:quizId` — Real response breakdown from simulated data
-7. `/demo` — Static mockup gallery (student view, push notifications, scheduling, etc.)
+7. `/teacher/quizzes` — Quiz history — all sent quizzes, click any to view analytics
+8. `/demo` — Static mockup gallery (student view, push notifications, scheduling, etc.)
 
-## Preset classes (hardcoded in frontend and api/classes.js)
+## Identity — how teacherId works
+
+There is no login. On first visit, `session.js` generates a `crypto.randomUUID()` and stores it in
+`localStorage` under the key `quizpulse_teacher_id`. This UUID is the `teacherId` for all API calls.
+
+| Scenario | Result |
+|---|---|
+| Same browser, return visit | Same UUID — questions and quizzes persist |
+| Different browser or device | New UUID — fresh isolated data |
+| Clear localStorage | New UUID — previous data orphaned in Cosmos DB |
+| Two people on different browsers | Completely isolated — no shared state |
+
+All API endpoints accept any `teacherId` string — there is no server-side auth enforcement.
+Data isolation is purely by UUID scoping in Cosmos DB queries.
+
+## Preset classes (hardcoded in frontend SendQuiz.jsx — api/classes.js is unused)
 
 | ID | Name | Students | Topic |
 |---|---|---|---|
@@ -117,25 +138,14 @@ Max combined: 75 students (~1,125 RUs per send — well within Cosmos DB serverl
 |---|---|---|
 | `/` | Home | No |
 | `/demo` | DemoGallery | No |
-| `/teacher/create` | CreateQuestion | Yes (teacher) |
-| `/teacher/bank` | QuestionBank | Yes (teacher) |
-| `/teacher/build` | BuildQuiz | Yes (teacher) |
-| `/teacher/send` | SendQuiz | Yes (teacher) |
-| `/teacher/analytics/:quizId` | Analytics | Yes (teacher) |
+| `/teacher/create` | CreateQuestion | No |
+| `/teacher/bank` | QuestionBank | No |
+| `/teacher/build` | BuildQuiz | No |
+| `/teacher/send` | SendQuiz | No |
+| `/teacher/quizzes` | QuizHistory | No |
+| `/teacher/analytics/:quizId` | Analytics | No |
 
-`/teacher/*` routes are protected at the SWA edge via `allowedRoles: [authenticated]` in
-`staticwebapp.config.json`. Unauthenticated requests are redirected to `/.auth/login/aad`.
-Home and DemoGallery are fully public.
-
-## Authentication
-
-- Provider: Azure Static Web Apps Easy Auth with Entra ID (Simple mode)
-- Login endpoint: `/.auth/login/aad`
-- User info endpoint: `/.auth/me` — returns `clientPrincipal` with stable `userId`
-- `AuthContext.jsx` fetches `/.auth/me` on mount and provides `{ user, teacherId, loading }`
-- `teacherId` = stable Entra ID `userId` on production; falls back to a `localStorage` UUID on localhost
-- `ProtectedRoute.jsx` redirects to `/.auth/login/aad` when `user` is null (production only)
-- No student auth — student flow has been removed from the demo
+All routes are fully public. SWA edge auth rules have been removed from `staticwebapp.config.json`.
 
 ## API routing — IMPORTANT
 
@@ -188,7 +198,7 @@ Database: `quizpulse`
 ```json
 {
   "id": "uuid",
-  "teacherId": "Entra ID userId (stable)",
+  "teacherId": "localStorage UUID",
   "text": "Question text",
   "options": ["A", "B", "C", "D"],
   "correctIndex": 0,
@@ -201,7 +211,7 @@ Database: `quizpulse`
 ```json
 {
   "id": "uuid",
-  "teacherId": "Entra ID userId (stable)",
+  "teacherId": "localStorage UUID",
   "name": "Week 4 — Photosynthesis check-in",
   "questionIds": ["uuid1", "uuid2"],
   "classIds": ["class-id"],
@@ -224,21 +234,24 @@ Database: `quizpulse`
 }
 ```
 
+**Note:** Orphaned data accumulates when visitors clear localStorage (their UUID changes but old
+documents remain). For a demo this is acceptable. Add a periodic cleanup or TTL policy if needed.
+
 ## API endpoints
 
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| POST | /questions | Teacher | Save a new question |
-| GET | /questions?teacherId= | Teacher | Get all questions scoped to teacherId |
-| PUT | /questions/:id | Teacher | Update a question (ownership checked) |
-| DELETE | /questions/:id?teacherId= | Teacher | Delete a question (ownership checked) |
-| POST | /quizzes | Teacher | Save a new quiz, returns quiz `id` |
-| GET | /quizzes?teacherId= | Teacher | Get all quizzes for teacher |
-| GET | /quizzes/:id | Public | Get a specific quiz by ID |
-| POST | /responses | Public | Submit a single student response (real student path — kept for completeness) |
-| GET | /responses?quizId= | Teacher | Get all responses for a quiz |
-| GET | /classes | Public | Get preset class list |
-| POST | /simulate | Public | Generate bulk simulated responses for a quiz |
+| POST | /questions | None | Save a new question |
+| GET | /questions?teacherId= | None | Get all questions scoped to teacherId |
+| PUT | /questions/:id | None | Update a question (ownership checked by teacherId) |
+| DELETE | /questions/:id?teacherId= | None | Delete a question (ownership checked by teacherId) |
+| POST | /quizzes | None | Save a new quiz, returns quiz `id` |
+| GET | /quizzes?teacherId= | None | Get all quizzes for teacher |
+| GET | /quizzes/:id | None | Get a specific quiz by ID |
+| POST | /responses | None | Submit a single student response (kept for completeness) |
+| GET | /responses?quizId= | None | Get all responses for a quiz |
+| GET | /classes | None | Get preset class list (unused by frontend) |
+| POST | /simulate | None | Generate bulk simulated responses for a quiz |
 
 ### Request security (applied to all POST/PUT handlers)
 
@@ -291,17 +304,16 @@ role on `quizpulse-kv`. The raw key is never stored in Function App configuratio
 |---|---|---|
 | Home page | ✅ Working | Landing page with demo flow overview |
 | Create Question | ✅ Working | Validated, scoped by teacherId |
-| Question Bank | ✅ Working | Backend-filtered by authenticated teacherId |
-| Edit/delete questions | ✅ Working | PUT/DELETE /api/questions/:id; inline edit UI in QuestionBank |
+| Question Bank | ✅ Working | Backend-filtered by teacherId |
+| Edit/delete questions | ✅ Working | PUT/DELETE /api/questions/:id; inline edit UI |
 | Build Quiz | ✅ Working | Loads real questions from API, reorder + remove |
 | Send Quiz | ✅ Working | POSTs quiz, calls /simulate, shows response count + analytics link |
 | Simulated responses | ✅ Working | POST /api/simulate generates server-side bulk responses |
-| Analytics | ✅ Working | Fetches quiz first, uses quiz.teacherId, filters to quiz.questionIds |
-| classSize on quiz | ✅ Working | Stored at send time; Analytics shows "X / Y responded" |
+| Analytics | ✅ Working | Per-question breakdown, correct bar chart proportions |
+| Quiz History | ✅ Working | Lists all quizzes, links to analytics |
 | Preset classes | ✅ Working | 3 hardcoded classes (Yr9 Sci 28, Yr10 Maths 25, Yr7 Eng 22) |
-| Teacher auth (Entra ID) | ✅ Working | Protects /teacher/* routes, stable userId |
-| DemoNav | ✅ Working | Fetches most recent quizId dynamically for Analytics link |
-| App Insights logging | ✅ Working | APPLICATIONINSIGHTS_CONNECTION_STRING set in Function App config |
+| No-auth open access | ✅ Working | localStorage UUID, no login required |
+| App Insights logging | ✅ Working | APPLICATIONINSIGHTS_CONNECTION_STRING set |
 | Preview gallery | ✅ Working | Static mockup placeholders — replace with real images in public/gallery/ |
 | Student flow | ❌ Removed | Demo is teacher-only; student view shown as mockup in Preview gallery |
 | Push notifications | ❌ Post-MVP | Azure Notification Hubs — shown as mockup |
@@ -311,62 +323,47 @@ role on `quizpulse-kv`. The raw key is never stored in Function App configuratio
 | Admin & rostering | ❌ Post-MVP | — |
 | LMS integration | ❌ Post-MVP | — |
 
-## Known issues
+## Known issues / pending cleanup
 
-### 1. SWA free tier does not proxy POST/PUT/DELETE
+### 1. Dead code — delete in next session
+- `src/pages/Login.jsx` — leftover MSAL login page, not routed anywhere
+- `src/session.js` — `studentId` named export is unused (only `getSessionId` is used)
+- `api/classes.js` — endpoint still deployed but frontend no longer calls it
+
+### 2. Analytics empty state copy is stale
+`Analytics.jsx:171` — empty state message still says "Share the quiz link with students to see results here."
+Should say something like "No responses recorded for this quiz." — no student link exists anymore.
+
+### 3. Quiz History shows no response counts
+Each quiz row shows `classSize` but not actual response count. To fix: either store `responseCount`
+on the quiz document at simulate time (cleanest), or fetch response counts per quiz on load (expensive).
+
+### 4. SWA free tier does not proxy POST/PUT/DELETE
 The `/api/*` rewrite rule in `staticwebapp.config.json` returns 405 for mutating HTTP methods.
-Frontend now calls the Function App URL directly (see API routing section). The SWA rewrite
-remains in config for reference but is bypassed.
-Long-term fix: upgrade SWA to Standard tier and use the linked backend feature instead.
+Frontend calls the Function App URL directly. The SWA rewrite remains in config but is bypassed.
+Long-term fix: upgrade SWA to Standard tier and use the linked backend feature.
 
-### 2. Rate limiter is per-instance, not global
+### 5. Rate limiter is per-instance, not global
 `rateLimit.js` uses an in-memory Map. State is not shared across Function App scale-out replicas.
-Fine for MVP; upgrade to Azure API Management for production scale.
+Fine for demo scale; upgrade to Azure API Management for production.
 
-### 3. Cosmos DB IP restriction skipped
-The Consumption plan does not support static outbound IPs (VNet integration requires Flex or Premium).
-Deferred until a plan upgrade is justified.
+### 6. Cosmos DB orphaned data
+Visitors who clear localStorage get a new UUID — their old Cosmos DB documents are never cleaned up.
+Acceptable for demo. Add a TTL policy on containers or a periodic cleanup Function if needed.
 
-### 4. Function App must be deployed separately
-The GitHub Actions workflow (`azure-static-web-apps-mango-meadow-0a5aa7410.yml`) only deploys the
-React frontend. Any changes to `api/` must be deployed manually:
+### 7. Function App must be deployed separately
+GitHub Actions deploys the React frontend only. API changes require manual deploy:
 ```powershell
 cd api
 func azure functionapp publish quizpulse-api
 ```
 
-## What was fixed / changed in the last session (session log)
-
-### Demo overhaul — teacher-only mode
-
-**Changes:**
-- Removed `TakeQuiz.jsx` and `Completion.jsx` — student flow deleted entirely
-- Added `Home.jsx` — landing page with demo flow description and CTAs
-- Added `DemoGallery.jsx` — static mockup cards for student view, push notifications, scheduling, etc.
-- Added `api/simulate.js` — `POST /api/simulate` generates `classSize` responses server-side via
-  `Promise.all`, avoiding the 5 req/min per-IP rate limit on the responses endpoint
-- Updated `SendQuiz.jsx` — replaced dynamic class fetch with hardcoded `PRESET_CLASSES` constant;
-  send flow now calls `/simulate` after saving the quiz; success state shows response count instead
-  of a student link
-- Updated `BuildQuiz.jsx` — passes full `questions` array (not just IDs) in router state so
-  `SendQuiz` can build the simulate payload with `optionCount` per question
-- Updated `DemoNav.jsx` — removed student links; added Home and Preview buttons
-- Updated `App.jsx` — `/` now routes to Home; added `/demo` route; removed `/student/*` routes
-- Updated `api/classes.js` — preset classes updated to Yr9 Sci (28), Yr10 Maths (25), Yr7 Eng (22)
-
-**Why simulate server-side:** Client-side N POSTs to `/responses` would trip the 5 req/min
-per-IP rate limiter. The dedicated `/simulate` endpoint handles all writes in one call.
-
-### Earlier session — bugs fixed
-- TakeQuiz: missing teacherId param caused "no questions" error — fixed by fetching quiz first
-- Analytics: same teacherId bug + missing questionIds filter — fixed
-- Completion screen: hardcoded data — fixed via router state
-- All POST/PUT/DELETE returning 500: `context.log.error` does not exist in Azure Functions v4 — replaced with `context.error`
-- SWA proxy 405 on POST: changed `api.js` to call Function App directly in production; updated CSP
-
-## Post-MVP features (planned for future sessions)
+## Post-MVP features (planned)
 
 - Real screenshots/images in Preview gallery (add to `public/gallery/`, update `DemoGallery.jsx`)
+- Fix stale Analytics empty state copy (see Known issues #2)
+- Store `responseCount` on quiz at simulate time (see Known issues #3)
+- Delete dead code: `Login.jsx`, `studentId` export in `session.js`, `api/classes.js`
 - Quiz link expiry (`closedAt` field + "quiz is closed" screen)
 - Student accounts with Microsoft school login
 - Quiz scheduling (send later — UI placeholder exists, backend not implemented)
@@ -375,6 +372,7 @@ per-IP rate limiter. The dedicated `/simulate` endpoint handles all writes in on
 - Native push notifications via Azure Notification Hubs (iOS + Android)
 - LMS integration (Canvas, Schoolbox)
 - Shared question bank across a school
+- Cosmos DB TTL or cleanup Function for orphaned visitor data
 
 ## Coding conventions
 
@@ -382,8 +380,7 @@ per-IP rate limiter. The dedicated `/simulate` endpoint handles all writes in on
 - Async/await for all API calls, always wrap in try/catch
 - API calls use `API_BASE` imported from `src/api.js`
 - In production `API_BASE` is the direct Function App URL — do not change to `/api`
-- `teacherId` from `AuthContext` (Entra ID userId on production, localStorage UUID on localhost)
-- No student identity — `session.js` is unused and can be removed in a future cleanup
+- `teacherId` from `AuthContext` → `useAuth()` → sourced from `localStorage` via `session.js`
 - No TypeScript — plain JavaScript throughout
 - CSS is inline styles — no CSS modules or styled-components
 - Azure Functions v4: use `context.error()` / `context.warn()` / `context.log()` — not `context.log.*`
@@ -395,7 +392,7 @@ per-IP rate limiter. The dedicated `/simulate` endpoint handles all writes in on
 git add .
 git commit -m "message"
 git push
-# → merge PR to master → GitHub Actions deploys frontend automatically
+# → open PR develop → master → merge → GitHub Actions deploys frontend automatically
 
 # API — must be deployed manually every time api/ files change
 cd api
