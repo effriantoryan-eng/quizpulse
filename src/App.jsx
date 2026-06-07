@@ -9,6 +9,7 @@ import SendQuiz from './pages/teacher/SendQuiz'
 import Analytics from './pages/teacher/Analytics'
 import QuizHistory from './pages/teacher/QuizHistory'
 import DemoNav from './components/DemoNav'
+import AdminLog from './pages/AdminLog'
 
 function AppRoutes() {
   return (
@@ -23,6 +24,7 @@ function AppRoutes() {
         <Route path="/teacher/send" element={<SendQuiz />} />
         <Route path="/teacher/quizzes" element={<QuizHistory />} />
         <Route path="/teacher/analytics/:quizId" element={<Analytics />} />
+        <Route path="/admin/log" element={<AdminLog />} />
       </Routes>
     </>
   )
