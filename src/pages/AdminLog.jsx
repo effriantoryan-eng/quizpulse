@@ -73,7 +73,7 @@ export default function AdminLog() {
   useEffect(() => {
     async function fetchLog() {
       try {
-        const url = `${API_BASE}/adminLog?code=${encodeURIComponent(code || '')}`
+        const url = `${API_BASE}/usageLog?code=${encodeURIComponent(code || '')}`
         const res = await fetch(url)
         if (res.status === 401) { setError('Unauthorised — invalid or missing key.'); return }
         if (!res.ok) throw new Error(`Server error ${res.status}`)
