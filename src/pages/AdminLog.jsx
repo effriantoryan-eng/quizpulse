@@ -124,6 +124,23 @@ export default function AdminLog() {
     ...data.quizzes.map(q => q.teacherId),
   ]).size
 
+  const uniqueSessions = new Set((data.pageviews || []).map(p => p.sessionId).filter(Boolean)).size
+
+  // Sort pageviews newest first
+  const sortedPageviews = [...(data.pageviews || [])].sort((a, b) => new Date(b.visitedAt) - new Date(a.visitedAt))
+
+  const PAGEVIEW_COLS = [
+    { key: 'visitedAt',   label: 'Time',        render: r => formatDate(r.visitedAt) },
+    { key: 'page',        label: 'Page' },
+    { key: 'teacherId',   label: 'Teacher ID',  render: r => r.teacherId?.slice(0, 8) + '…' },
+    { key: 'sessionId',   label: 'Session',     render: r => r.sessionId?.slice(0, 8) + '…' },
+    { key: 'referrer',    label: 'Referrer',    render: r => r.referrer || '—' },
+    { key: 'language',    label: 'Language' },
+    { key: 'timezone',    label: 'Timezone' },
+    { key: 'screen',      label: 'Screen',      render: r => r.screenWidth && r.screenHeight ? `${r.screenWidth}×${r.screenHeight}` : '—' },
+    { key: 'userAgent',   label: 'User agent',  render: r => r.userAgent || '—' },
+  ]
+
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px' }}>
       <div style={{ background: '#1a1433', borderRadius: '14px', padding: '24px 28px', marginBottom: '28px', color: 'white' }}>
@@ -143,6 +160,8 @@ export default function AdminLog() {
             <div style={{ fontSize: '13px', color: 'white', fontWeight: '500' }}>{formatDate(data.retrievedAt)}</div>
             <div style={{ fontSize: '11px', color: '#9b93e8', marginTop: '8px', marginBottom: '4px' }}>Unique teachers</div>
             <div style={{ fontSize: '20px', color: '#a78bfa', fontWeight: '700' }}>{uniqueTeachers}</div>
+            <div style={{ fontSize: '11px', color: '#9b93e8', marginTop: '8px', marginBottom: '4px' }}>Unique sessions</div>
+            <div style={{ fontSize: '20px', color: '#a78bfa', fontWeight: '700' }}>{uniqueSessions}</div>
           </div>
         </div>
         <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '11px', color: '#9b93e8' }}>
@@ -150,22 +169,24 @@ export default function AdminLog() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '32px' }}>
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '32px', flexWrap: 'wrap' }}>
         {[
-          { label: 'Questions', value: data.counts.questions },
-          { label: 'Quizzes',   value: data.counts.quizzes },
-          { label: 'Responses', value: data.counts.responses },
+          { label: 'Page views', value: data.counts.pageviews },
+          { label: 'Questions',  value: data.counts.questions },
+          { label: 'Quizzes',    value: data.counts.quizzes },
+          { label: 'Responses',  value: data.counts.responses },
         ].map(({ label, value }) => (
-          <div key={label} style={{ flex: 1, background: '#EEEDFE', borderRadius: '10px', padding: '16px 20px' }}>
+          <div key={label} style={{ flex: 1, minWidth: '100px', background: '#EEEDFE', borderRadius: '10px', padding: '16px 20px' }}>
             <div style={{ fontSize: '24px', fontWeight: '700', color: '#534AB7' }}>{value}</div>
             <div style={{ fontSize: '12px', color: '#7a72c9', marginTop: '2px' }}>{label}</div>
           </div>
         ))}
       </div>
 
-      <Section title="Questions" count={data.counts.questions} rows={data.questions} columns={QUESTION_COLS} truncatedAt={data.truncatedAt} />
-      <Section title="Quizzes"   count={data.counts.quizzes}   rows={data.quizzes}   columns={QUIZ_COLS}     truncatedAt={data.truncatedAt} />
-      <Section title="Responses" count={data.counts.responses} rows={data.responses} columns={RESPONSE_COLS} truncatedAt={data.truncatedAt} />
+      <Section title="Page views" count={sortedPageviews.length} rows={sortedPageviews} columns={PAGEVIEW_COLS} truncatedAt={data.truncatedAt} />
+      <Section title="Questions"  count={data.counts.questions}  rows={data.questions}  columns={QUESTION_COLS} truncatedAt={data.truncatedAt} />
+      <Section title="Quizzes"    count={data.counts.quizzes}    rows={data.quizzes}    columns={QUIZ_COLS}     truncatedAt={data.truncatedAt} />
+      <Section title="Responses"  count={data.counts.responses}  rows={data.responses}  columns={RESPONSE_COLS} truncatedAt={data.truncatedAt} />
     </div>
   )
 }
