@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
-
+import { useHint } from '../../hooks/useHint'
+import HintBanner from '../../components/HintBanner'
 import API_BASE from '../../api'
 
 const TOPIC_COLORS = {
@@ -17,6 +18,7 @@ const BLANK_FORM = { text: '', options: ['', '', '', ''], correctIndex: 0, topic
 
 function QuestionBank() {
   const { teacherId } = useAuth()
+  const [hintVisible, dismissHint, showHint] = useHint('bank')
   const [questions, setQuestions] = useState([])
   const [filter, setFilter] = useState('All')
   const [selected, setSelected] = useState([])
@@ -104,7 +106,18 @@ function QuestionBank() {
 
   return (
     <div style={{ maxWidth: 640, margin: '0 auto', padding: '24px' }}>
-      <h2 style={{ marginBottom: '24px' }}>Question bank</h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+        <h2 style={{ margin: 0 }}>Question bank</h2>
+        {!hintVisible && (
+          <button onClick={showHint} style={{ background: 'none', border: '1px solid #C5C0F0', borderRadius: '50%', width: '26px', height: '26px', cursor: 'pointer', color: '#7B6EDE', fontSize: '13px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>?</button>
+        )}
+      </div>
+      {hintVisible && (
+        <HintBanner
+          text="These are your saved questions. Filter by topic, edit inline, or delete. Head to Build Quiz when you're ready to assemble them into a quiz."
+          onDismiss={dismissHint}
+        />
+      )}
 
       {questions.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '48px', color: '#aaa', fontSize: '14px' }}>

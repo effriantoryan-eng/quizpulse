@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 // ─── Design tokens ────────────────────────────────────────────────
 const C = {
@@ -16,6 +16,33 @@ const C = {
   muted:       '#aaa',
 }
 
+function useWindowWidth() {
+  const [width, setWidth] = useState(() => window.innerWidth)
+  useEffect(() => {
+    const handler = () => setWidth(window.innerWidth)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+  return width
+}
+
+function SectionLabel({ role }) {
+  const isTeacher = role === 'teacher'
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+      <span style={{
+        fontSize: '11px', fontWeight: '700', letterSpacing: '0.6px', textTransform: 'uppercase',
+        padding: '3px 10px', borderRadius: '20px',
+        background: isTeacher ? C.purpleLight : C.greenLight,
+        color: isTeacher ? C.purple : C.green,
+      }}>
+        {isTeacher ? '👩‍🏫 Teacher view' : '🎓 Student view'}
+      </span>
+      <div style={{ flex: 1, height: '1px', background: C.border }} />
+    </div>
+  )
+}
+
 function Badge({ label, live }) {
   const isLive   = label === 'Live in demo'
   const isActive = label === 'Interactive'
@@ -28,7 +55,7 @@ function Badge({ label, live }) {
   )
 }
 
-function CardShell({ title, subtitle, badge, children }) {
+function CardShell({ title, subtitle, badge, hint, children }) {
   return (
     <div style={{ background: 'white', borderRadius: '16px', border: `1px solid ${C.border}`, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
       <div style={{ padding: '18px 20px 14px', borderBottom: `1px solid ${C.border}` }}>
@@ -37,6 +64,11 @@ function CardShell({ title, subtitle, badge, children }) {
           <Badge label={badge} />
         </div>
         <div style={{ fontSize: '12px', color: C.sub }}>{subtitle}</div>
+        {hint && (
+          <div style={{ marginTop: '8px', fontSize: '11px', color: C.purple, background: C.purpleLight, borderRadius: '6px', padding: '6px 10px', lineHeight: '1.5' }}>
+            {hint}
+          </div>
+        )}
       </div>
       <div style={{ padding: '20px' }}>
         {children}
@@ -62,7 +94,7 @@ const QUIZ_QUESTIONS = [
 function PhoneShell({ children }) {
   return (
     <div style={{
-      width: '200px', margin: '0 auto',
+      width: 'min(200px, 85%)', margin: '0 auto',
       background: '#111', borderRadius: '32px',
       padding: '10px', boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
     }}>
@@ -207,7 +239,7 @@ function Card1() {
   function handleDone() { setTab(2); setQuizDone(true) }
 
   return (
-    <CardShell title="Student experience" subtitle="Notification → quiz → completion, all on mobile" badge="Interactive">
+    <CardShell title="Student experience" subtitle="Notification → quiz → completion, all on mobile" badge="Interactive" hint="Switch tabs to walk through the full student journey. The Quiz tab is playable — select an answer and confirm.">
       <div style={{ display: 'flex', gap: '4px', marginBottom: '16px' }}>
         {TABS.map((t, i) => (
           <button key={t} onClick={() => setTab(i)}
@@ -258,7 +290,7 @@ function Card2() {
   const total = q.counts.reduce((a, b) => a + b, 0)
 
   return (
-    <CardShell title="Quiz analytics" subtitle="Per-question response breakdown" badge="Live in demo">
+    <CardShell title="Quiz analytics" subtitle="Per-question response breakdown" badge="Live in demo" hint="Click Q1 / Q2 / Q3 to switch questions. Green bar = correct answer. This is the real analytics view already live in the demo.">
       {/* Q selector */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
         {ANALYTICS_DATA.map((_, i) => (
@@ -326,7 +358,7 @@ function Card3() {
       : `Quiz will be sent every ${days.join(', ')} at ${time}.`
 
   return (
-    <CardShell title="Quiz scheduling" subtitle="Send now or schedule recurring sends" badge="Post-MVP">
+    <CardShell title="Quiz scheduling" subtitle="Send now or schedule recurring sends" badge="Post-MVP" hint="Toggle between Send now and Schedule, pick days and a time, then try saving — this is a post-MVP mockup.">
       {/* mode toggle */}
       <div style={{ display: 'flex', background: '#f5f5f5', borderRadius: '10px', padding: '3px', marginBottom: '16px' }}>
         {['now', 'schedule'].map(m => (
@@ -376,7 +408,7 @@ function Card3() {
 // ─── Card 4: Push Notifications ───────────────────────────────────
 function LockScreenPhone() {
   return (
-    <div style={{ width: '180px', margin: '0 auto', background: 'linear-gradient(160deg, #1a1a2e 0%, #16213e 100%)', borderRadius: '28px', padding: '8px', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
+    <div style={{ width: 'min(180px, 85%)', margin: '0 auto', background: 'linear-gradient(160deg, #1a1a2e 0%, #16213e 100%)', borderRadius: '28px', padding: '8px', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
       {/* notch */}
       <div style={{ height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '4px' }}>
         <div style={{ width: '50px', height: '8px', background: '#000', borderRadius: '8px' }} />
@@ -417,7 +449,7 @@ function LockScreenPhone() {
 
 function Card4() {
   return (
-    <CardShell title="Native push notifications" subtitle="iOS & Android via Azure Notification Hubs" badge="Post-MVP">
+    <CardShell title="Native push notifications" subtitle="iOS & Android via Azure Notification Hubs" badge="Post-MVP" hint="This shows what students will see on their lock screen when a teacher sends a quiz.">
       <LockScreenPhone />
       <div style={{ marginTop: '16px' }}>
         <div style={{ fontSize: '12px', fontWeight: '600', color: C.text, marginBottom: '8px' }}>How it works</div>
@@ -442,6 +474,9 @@ function Card4() {
 
 // ─── Page ─────────────────────────────────────────────────────────
 export default function DemoGallery() {
+  const width = useWindowWidth()
+  const cols = width >= 600 ? 'repeat(2, 1fr)' : '1fr'
+
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '40px 24px' }}>
       <div style={{ marginBottom: '36px' }}>
@@ -449,15 +484,24 @@ export default function DemoGallery() {
           Preview gallery
         </h2>
         <p style={{ fontSize: '14px', color: C.sub, margin: 0 }}>
-          Interactive mockups of the student experience and upcoming features. Cards 1 and 2 are fully interactive — try them.
+          Interactive mockups of the student experience and upcoming features.
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
-        <Card1 />
-        <Card2 />
-        <Card3 />
-        <Card4 />
+      <div style={{ marginBottom: '32px' }}>
+        <SectionLabel role="student" />
+        <div style={{ display: 'grid', gridTemplateColumns: cols, gap: '20px' }}>
+          <Card1 />
+          <Card4 />
+        </div>
+      </div>
+
+      <div>
+        <SectionLabel role="teacher" />
+        <div style={{ display: 'grid', gridTemplateColumns: cols, gap: '20px' }}>
+          <Card2 />
+          <Card3 />
+        </div>
       </div>
     </div>
   )

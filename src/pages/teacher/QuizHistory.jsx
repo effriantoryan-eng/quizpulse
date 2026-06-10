@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { useHint } from '../../hooks/useHint'
+import HintBanner from '../../components/HintBanner'
 import API_BASE from '../../api'
 
 const CLASS_NAMES = {
@@ -17,6 +19,7 @@ function formatDate(iso) {
 export default function QuizHistory() {
   const { teacherId } = useAuth()
   const navigate = useNavigate()
+  const [hintVisible, dismissHint, showHint] = useHint('history')
   const [quizzes, setQuizzes] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -43,15 +46,26 @@ export default function QuizHistory() {
 
   return (
     <div style={{ maxWidth: 640, margin: '0 auto', padding: '24px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
         <h2 style={{ margin: 0, fontSize: '20px' }}>Quiz history</h2>
-        <button
-          onClick={() => navigate('/teacher/build')}
-          style={{ padding: '8px 16px', background: '#534AB7', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}
-        >
-          + New quiz
-        </button>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          {!hintVisible && (
+            <button onClick={showHint} style={{ background: 'none', border: '1px solid #C5C0F0', borderRadius: '50%', width: '26px', height: '26px', cursor: 'pointer', color: '#7B6EDE', fontSize: '13px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>?</button>
+          )}
+          <button
+            onClick={() => navigate('/teacher/build')}
+            style={{ padding: '8px 16px', background: '#534AB7', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}
+          >
+            + New quiz
+          </button>
+        </div>
       </div>
+      {hintVisible && (
+        <HintBanner
+          text="All quizzes you've sent are listed here. Click any row to view its full analytics breakdown."
+          onDismiss={dismissHint}
+        />
+      )}
 
       {quizzes.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '48px', color: '#aaa', fontSize: '14px', border: '1px dashed #ddd', borderRadius: '12px' }}>
