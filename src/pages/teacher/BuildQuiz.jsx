@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-
+import { useHint } from '../../hooks/useHint'
+import HintBanner from '../../components/HintBanner'
 import API_BASE from '../../api'
 
 const TOPIC_COLORS = {
@@ -15,6 +16,7 @@ const TOPIC_COLORS = {
 function BuildQuiz() {
   const { teacherId } = useAuth()
   const navigate = useNavigate()
+  const [hintVisible, dismissHint, showHint] = useHint('build')
   const [quizName, setQuizName] = useState('')
   const [allQuestions, setAllQuestions] = useState([])
   const [selected, setSelected] = useState([])
@@ -82,7 +84,18 @@ function BuildQuiz() {
 
   return (
     <div style={{ maxWidth: 760, margin: '0 auto', padding: '24px' }}>
-      <h2 style={{ marginBottom: '24px' }}>Build quiz</h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+        <h2 style={{ margin: 0 }}>Build quiz</h2>
+        {!hintVisible && (
+          <button onClick={showHint} style={{ background: 'none', border: '1px solid #C5C0F0', borderRadius: '50%', width: '26px', height: '26px', cursor: 'pointer', color: '#7B6EDE', fontSize: '13px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>?</button>
+        )}
+      </div>
+      {hintVisible && (
+        <HintBanner
+          text="Select the questions to include, reorder them using the arrows, give your quiz a name, then click Proceed to Send."
+          onDismiss={dismissHint}
+        />
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
 

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { useHint } from '../../hooks/useHint'
+import HintBanner from '../../components/HintBanner'
 import API_BASE from '../../api'
 
 const PRESET_CLASSES = [
@@ -19,6 +21,7 @@ function SendQuiz() {
   const { teacherId } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
+  const [hintVisible, dismissHint, showHint] = useHint('send')
   const { quizName = '', questionIds = [], questions = [] } = location.state || {}
 
   const [selectedClasses, setSelectedClasses] = useState([PRESET_CLASSES[0].id])
@@ -101,7 +104,18 @@ function SendQuiz() {
 
   return (
     <div style={{ maxWidth: 480, margin: '0 auto', padding: '24px' }}>
-      <h2 style={{ marginBottom: '24px' }}>Send quiz</h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+        <h2 style={{ margin: 0 }}>Send quiz</h2>
+        {!hintVisible && (
+          <button onClick={showHint} style={{ background: 'none', border: '1px solid #C5C0F0', borderRadius: '50%', width: '26px', height: '26px', cursor: 'pointer', color: '#7B6EDE', fontSize: '13px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>?</button>
+        )}
+      </div>
+      {hintVisible && (
+        <HintBanner
+          text="Pick which class(es) to send to — student responses will be simulated automatically. Click Send to post the quiz and jump straight to analytics."
+          onDismiss={dismissHint}
+        />
+      )}
 
       {/* Quiz summary */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 18px', background: '#f8f8f8', borderRadius: '10px', marginBottom: '24px', border: '1px solid #eee' }}>

@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
-
+import { useHint } from '../../hooks/useHint'
+import HintBanner from '../../components/HintBanner'
 import API_BASE from '../../api'
 
 function CreateQuestion() {
   const { teacherId } = useAuth()
+  const [hintVisible, dismissHint, showHint] = useHint('create')
   const [question, setQuestion] = useState('')
   const [options, setOptions] = useState(['', '', '', ''])
   const [correctIndex, setCorrectIndex] = useState(null)
@@ -55,7 +57,18 @@ function CreateQuestion() {
 
   return (
     <div style={{ maxWidth: 560, margin: '0 auto', padding: '24px' }}>
-      <h2 style={{ marginBottom: '24px' }}>Create question</h2>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+        <h2 style={{ margin: 0 }}>Create question</h2>
+        {!hintVisible && (
+          <button onClick={showHint} style={{ background: 'none', border: '1px solid #C5C0F0', borderRadius: '50%', width: '26px', height: '26px', cursor: 'pointer', color: '#7B6EDE', fontSize: '13px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>?</button>
+        )}
+      </div>
+      {hintVisible && (
+        <HintBanner
+          text="Write a question, fill in 4 options, mark the correct answer, and choose a topic. Click Save — you can create as many as you like before building a quiz."
+          onDismiss={dismissHint}
+        />
+      )}
 
       {saved && (
         <div style={{ padding: '10px 14px', background: '#EAF3DE', color: '#3B6D11', borderRadius: '8px', marginBottom: '16px', fontSize: '14px' }}>

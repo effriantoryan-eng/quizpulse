@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-
+import { useHint } from '../../hooks/useHint'
+import HintBanner from '../../components/HintBanner'
 import API_BASE from '../../api'
 
 const OPTION_COLORS = ['#E6F1FB', '#EEEDFE', '#FAEEDA', '#FBEAF0']
@@ -11,6 +12,7 @@ const CORRECT_BORDER = '#3B6D11'
 function Analytics() {
   const { quizId } = useParams()
   const navigate = useNavigate()
+  const [hintVisible, dismissHint, showHint] = useHint('analytics')
   const [quiz, setQuiz] = useState(null)
   const [classSize, setClassSize] = useState(null)
   const [questions, setQuestions] = useState([])
@@ -71,18 +73,28 @@ function Analytics() {
     <div style={{ maxWidth: 680, margin: '0 auto', padding: '24px' }}>
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '28px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
         <button
           onClick={() => navigate('/teacher/quizzes')}
           style={{ background: 'none', border: '1px solid #e0e0e0', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', fontSize: '13px', color: '#666' }}
         >
           ← Back
         </button>
-        <div>
+        <div style={{ flex: 1 }}>
           <h2 style={{ margin: 0, fontSize: '20px' }}>Quiz Analytics</h2>
           <div style={{ fontSize: '13px', color: '#888', marginTop: '2px' }}>Quiz ID: {quizId}</div>
         </div>
+        {!hintVisible && (
+          <button onClick={showHint} style={{ background: 'none', border: '1px solid #C5C0F0', borderRadius: '50%', width: '26px', height: '26px', cursor: 'pointer', color: '#7B6EDE', fontSize: '13px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>?</button>
+        )}
       </div>
+      {hintVisible && (
+        <HintBanner
+          text="Each question shows how the class responded. The green bar is the correct answer. Use the question cards below to see the full breakdown."
+          onDismiss={dismissHint}
+        />
+      )}
+
 
       {/* Summary card */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '28px' }}>
