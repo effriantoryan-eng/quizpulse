@@ -10,8 +10,10 @@ import Analytics from './pages/teacher/Analytics'
 import QuizHistory from './pages/teacher/QuizHistory'
 import DemoNav from './components/DemoNav'
 import AdminLog from './pages/AdminLog'
+import { usePageView } from './hooks/usePageView'
 
 function AppRoutes() {
+  usePageView()
   return (
     <>
       <DemoNav />
