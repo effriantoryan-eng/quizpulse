@@ -36,7 +36,7 @@ function Pill({ label, variant = 'neutral' }) {
 // ─── Panel 01 SVG ──────────────────────────────────────────────────────────────
 function Svg01({ qMarkRef }) {
   return (
-    <svg width="160" height="100" viewBox="0 0 160 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ display: 'block', margin: '0 auto 12px' }}>
+    <svg width="160" height="100" viewBox="0 0 160 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ display: 'block', margin: '0 auto 12px', maxWidth: '100%', height: 'auto' }}>
       {/* Faded question mark — animates */}
       <g ref={qMarkRef}>
         <text x="100" y="88" fontSize="90" fill="#534AB7" fillOpacity="0.07" fontWeight="700" fontFamily="serif">?</text>
@@ -64,7 +64,7 @@ function Svg01({ qMarkRef }) {
 // ─── Panel 02 SVG ──────────────────────────────────────────────────────────────
 function Svg02({ arrowRef }) {
   return (
-    <svg width="160" height="118" viewBox="0 0 160 118" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ display: 'block', margin: '0 auto 12px' }}>
+    <svg width="160" height="118" viewBox="0 0 160 118" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ display: 'block', margin: '0 auto 12px', maxWidth: '100%', height: 'auto' }}>
       {/* Phone frame — dark */}
       <rect x="30" y="0" width="88" height="118" rx="14" fill="#1C1C1E"/>
       {/* Screen */}
@@ -123,7 +123,7 @@ function Svg02({ arrowRef }) {
 // ─── Panel 03 SVG ──────────────────────────────────────────────────────────────
 function Svg03({ notifCardRef }) {
   return (
-    <svg width="160" height="118" viewBox="0 0 160 118" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ display: 'block', margin: '0 auto 12px' }}>
+    <svg width="160" height="118" viewBox="0 0 160 118" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ display: 'block', margin: '0 auto 12px', maxWidth: '100%', height: 'auto' }}>
       {/* Phone frame */}
       <rect x="35" y="0" width="90" height="118" rx="14" fill="#0D0D0D"/>
       {/* Screen — dark wallpaper */}
@@ -174,7 +174,7 @@ function Svg03({ notifCardRef }) {
 // ─── Panel 04 SVG ──────────────────────────────────────────────────────────────
 function Svg04({ answerBRef }) {
   return (
-    <svg width="160" height="100" viewBox="0 0 160 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ display: 'block', margin: '0 auto 12px' }}>
+    <svg width="160" height="100" viewBox="0 0 160 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ display: 'block', margin: '0 auto 12px', maxWidth: '100%', height: 'auto' }}>
       {/* Student figure */}
       <circle cx="28" cy="22" r="8" fill="#534AB7" fillOpacity="0.6"/>
       <rect x="21" y="32" width="14" height="18" rx="4" fill="#534AB7" fillOpacity="0.6"/>
@@ -207,7 +207,7 @@ function Svg04({ answerBRef }) {
 // ─── Panel 05 SVG ─────────────────────────────────────────────────────────────
 function Svg05({ badgeRef, q2BarRef }) {
   return (
-    <svg width="180" height="100" viewBox="0 0 180 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ display: 'block', margin: '0 auto 12px' }}>
+    <svg width="180" height="100" viewBox="0 0 180 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ display: 'block', margin: '0 auto 12px', maxWidth: '100%', height: 'auto' }}>
       {/* Dashboard card */}
       <rect x="8" y="5" width="164" height="90" rx="8" fill="white" stroke="#E8E8E8" strokeWidth="1.5"/>
       <text x="18" y="21" fontSize="8" fontWeight="700" fill="#1a1433" fontFamily="system-ui">Week 4 Quiz — Results</text>
@@ -370,8 +370,8 @@ function NarrativePanels() {
     <div ref={sectionRef} style={{ marginBottom: '48px' }}>
       <div style={{ border: '1px solid #eee', borderRadius: '12px', overflow: 'hidden', background: '#eee' }}>
 
-        {/* Top row — 3 columns */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1px' }}>
+        {/* Top row — 3 columns (collapses to 1 on mobile via CSS) */}
+        <div className="qp-top-row" style={{ display: 'grid', gap: '1px' }}>
 
           <div style={{ ...panelBase, borderRadius: '11px 0 0 0' }}>
             <Pill label="every day" variant="neutral" />
@@ -401,8 +401,8 @@ function NarrativePanels() {
         {/* Row gap */}
         <div style={{ height: '1px', background: '#eee' }} />
 
-        {/* Bottom row — 2 columns */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1px' }}>
+        {/* Bottom row — 2 columns (collapses to 1 on mobile via CSS) */}
+        <div className="qp-bottom-row" style={{ display: 'grid', gap: '1px' }}>
 
           <div style={{ ...panelBase, borderRadius: '0 0 0 11px' }}>
             <Pill label="for students" variant="purple" />
@@ -442,9 +442,11 @@ function NarrativePanelsResponsive() {
       const style = document.createElement('style')
       style.id = styleId
       style.textContent = `
+        .qp-top-row    { grid-template-columns: repeat(3, 1fr); }
+        .qp-bottom-row { grid-template-columns: repeat(2, 1fr); }
         @media (max-width: 640px) {
-          .qp-top-row    { grid-template-columns: 1fr !important; }
-          .qp-bottom-row { grid-template-columns: 1fr !important; }
+          .qp-top-row    { grid-template-columns: 1fr; }
+          .qp-bottom-row { grid-template-columns: 1fr; }
         }
       `
       document.head.appendChild(style)
