@@ -196,7 +196,8 @@ function NarrativePanels() {
   const answerBRef    = useRef(null)
   const q2BarRef      = useRef(null)
   const badgeRef      = useRef(null)
-  const animatedRef   = useRef(false)
+  const timerIds      = useRef([])
+  const loopStarted   = useRef(false)
 
   useEffect(() => {
     const styleId = 'qp-narrative-styles'
@@ -241,30 +242,63 @@ function NarrativePanels() {
       document.head.appendChild(style)
     }
 
-    const STAGGER = 350
-    const sequence = [
+    const STAGGER      = 700   // ms between each panel
+    const BADGE_OFFSET = 600   // extra delay before badge after bar starts
+    const LOOP_PAUSE   = 2000  // gap between end of last animation and next cycle start
+    // Sequence ends at: STAGGER*4 + BADGE_OFFSET + 750ms (badge duration)
+    const SEQUENCE_DURATION = STAGGER * 4 + BADGE_OFFSET + 750
+
+    const items = [
       { ref: qMarkRef,     cls: 'qp-float-up',     delay: 0 },
       { ref: arrowRef,     cls: 'qp-arrow-flash',  delay: STAGGER },
       { ref: notifCardRef, cls: 'qp-notif-bounce', delay: STAGGER * 2 },
       { ref: answerBRef,   cls: 'qp-tap-pulse',    delay: STAGGER * 3 },
       { ref: q2BarRef,     cls: 'qp-bar-fill',     delay: STAGGER * 4 },
-      { ref: badgeRef,     cls: 'qp-badge-pulse',  delay: STAGGER * 4 + 500 },
+      { ref: badgeRef,     cls: 'qp-badge-pulse',  delay: STAGGER * 4 + BADGE_OFFSET },
     ]
+
+    function clearTimers() {
+      timerIds.current.forEach(clearTimeout)
+      timerIds.current = []
+    }
+
+    function runLoop() {
+      clearTimers()
+
+      // Reset: remove classes so animations can restart
+      items.forEach(({ ref, cls }) => {
+        if (ref.current) ref.current.classList.remove(cls)
+      })
+
+      // Fire each item after its stagger delay.
+      // getBoundingClientRect() before adding the class forces a reflow so the
+      // CSS animation restarts cleanly even if the class was just removed.
+      items.forEach(({ ref, cls, delay }) => {
+        const id = setTimeout(() => {
+          if (!ref.current) return
+          ref.current.getBoundingClientRect()
+          ref.current.classList.add(cls)
+        }, delay)
+        timerIds.current.push(id)
+      })
+
+      // Schedule the next cycle
+      const nextId = setTimeout(runLoop, SEQUENCE_DURATION + LOOP_PAUSE)
+      timerIds.current.push(nextId)
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !animatedRef.current) {
-          animatedRef.current = true
-          sequence.forEach(({ ref, cls, delay }) => {
-            setTimeout(() => { if (ref.current) ref.current.classList.add(cls) }, delay)
-          })
+        if (entry.isIntersecting && !loopStarted.current) {
+          loopStarted.current = true
+          runLoop()
         }
       },
       { threshold: 0.2 }
     )
 
     if (sectionRef.current) observer.observe(sectionRef.current)
-    return () => observer.disconnect()
+    return () => { observer.disconnect(); clearTimers() }
   }, [])
 
   const panelBase  = { padding: '20px 16px 18px', background: 'white', position: 'relative' }
