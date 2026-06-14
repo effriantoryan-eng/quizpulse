@@ -64,25 +64,57 @@ function Svg01({ qMarkRef }) {
 // ─── Panel 02 SVG ──────────────────────────────────────────────────────────────
 function Svg02({ arrowRef }) {
   return (
-    <svg width="160" height="100" viewBox="0 0 160 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ display: 'block', margin: '0 auto 12px' }}>
-      {/* Phone outline */}
-      <rect x="45" y="5" width="70" height="90" rx="10" fill="white" stroke="#DDD" strokeWidth="1.5"/>
-      <rect x="50" y="14" width="60" height="72" rx="4" fill="#F9F9F9"/>
-      <rect x="50" y="14" width="60" height="16" rx="4" fill="#EFEFEF"/>
-      <text x="80" y="25" textAnchor="middle" fontSize="7" fill="#666" fontFamily="system-ui">Yr 9 Science 🔬</text>
-      <rect x="54" y="34" width="32" height="7" rx="3" fill="#E0E0E0"/>
-      <rect x="76" y="44" width="28" height="7" rx="3" fill="#E8E8E8"/>
-      <rect x="54" y="54" width="24" height="7" rx="3" fill="#E0E0E0"/>
-      <text x="56" y="70" fontSize="8" fill="#888">😂 🔥 💀 😭 🤣</text>
-      <text x="58" y="79" fontSize="8" fill="#888">👀 😅 🔥 😂</text>
-      {/* Buried link — static */}
-      <rect x="54" y="83" width="38" height="7" rx="2" fill="#EEEDFE" opacity="0.6"/>
-      <text x="73" y="89" textAnchor="middle" fontSize="6" fill="#534AB7" opacity="0.8" fontFamily="system-ui">forms.gle/quiz →</text>
-      {/* Red arrow + label — animates */}
+    <svg width="160" height="118" viewBox="0 0 160 118" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ display: 'block', margin: '0 auto 12px' }}>
+      {/* Phone frame — dark */}
+      <rect x="30" y="0" width="88" height="118" rx="14" fill="#1C1C1E"/>
+      {/* Screen */}
+      <rect x="32" y="2" width="84" height="114" rx="12" fill="#FFFFFF"/>
+      {/* Punch-hole camera */}
+      <circle cx="74" cy="9" r="2.5" fill="#1C1C1E"/>
+      {/* Status bar */}
+      <text x="37" y="16" fontSize="5.5" fontWeight="700" fill="#111" fontFamily="system-ui">9:41</text>
+      {/* Signal bars */}
+      <rect x="97" y="13.5" width="2" height="2.5" rx="0.5" fill="#111"/>
+      <rect x="100.5" y="12" width="2" height="4" rx="0.5" fill="#111"/>
+      <rect x="104" y="10.5" width="2" height="5.5" rx="0.5" fill="#111"/>
+      {/* Battery */}
+      <rect x="108" y="11" width="8.5" height="5" rx="1" fill="none" stroke="#111" strokeWidth="0.7"/>
+      <rect x="116.5" y="12.5" width="1.5" height="2" rx="0.5" fill="#111"/>
+      <rect x="109" y="12" width="6" height="3" rx="0.5" fill="#111"/>
+      {/* App header */}
+      <rect x="32" y="19" width="84" height="15" fill="#F2F2F7"/>
+      {/* Back chevron */}
+      <path d="M39 26.5 l-3-3 l3-3" stroke="#534AB7" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+      <text x="76" y="29.5" textAnchor="middle" fontSize="6.5" fontWeight="700" fill="#1C1C1E" fontFamily="system-ui">Year 9 Science 🔬</text>
+      {/* Divider */}
+      <line x1="32" y1="34" x2="116" y2="34" stroke="#E5E5EA" strokeWidth="0.5"/>
+
+      {/* Student bubble — left */}
+      <rect x="36" y="37" width="44" height="11" rx="5.5" fill="#E5E5EA"/>
+      <text x="58" y="45" textAnchor="middle" fontSize="5.5" fill="#333" fontFamily="system-ui">any hw tonight? 😅</text>
+
+      {/* Teacher link bubble — right (sent) */}
+      <rect x="72" y="51" width="40" height="17" rx="7" fill="#534AB7"/>
+      <text x="92" y="59.5" textAnchor="middle" fontSize="5.5" fontWeight="700" fill="white" fontFamily="system-ui">📋 Quiz Check-in</text>
+      <text x="92" y="66.5" textAnchor="middle" fontSize="4.5" fill="rgba(255,255,255,0.72)" fontFamily="system-ui">forms.gle/yr9quiz</text>
+
+      {/* Emoji flood */}
+      <rect x="36" y="71" width="50" height="11" rx="5.5" fill="#E5E5EA"/>
+      <text x="61" y="79.5" textAnchor="middle" fontSize="8" fontFamily="system-ui">😂🔥💀😭</text>
+      <rect x="36" y="85" width="42" height="11" rx="5.5" fill="#E5E5EA"/>
+      <text x="57" y="93.5" textAnchor="middle" fontSize="8" fontFamily="system-ui">🤣😅🔥😂</text>
+      <rect x="36" y="99" width="34" height="11" rx="5.5" fill="#E5E5EA"/>
+      <text x="53" y="107.5" textAnchor="middle" fontSize="8" fontFamily="system-ui">👀💀🤣</text>
+
+      {/* Home indicator */}
+      <rect x="54" y="112" width="40" height="2.5" rx="1.25" fill="#1C1C1E" opacity="0.15"/>
+
+      {/* Red callout arrow — points at buried teacher link, animates */}
       <g ref={arrowRef}>
-        <line x1="98" y1="86" x2="110" y2="68" stroke="#A32D2D" strokeWidth="1.5" strokeLinecap="round"/>
-        <polygon points="98,80 95,88 103,86" fill="#A32D2D"/>
-        <text x="112" y="67" fontSize="7" fill="#A32D2D" fontFamily="system-ui" textAnchor="start">link buried ↑</text>
+        <line x1="122" y1="60" x2="114" y2="60" stroke="#A32D2D" strokeWidth="1.5" strokeLinecap="round"/>
+        <polygon points="112,60 116,57.5 116,62.5" fill="#A32D2D"/>
+        <text x="124" y="57" fontSize="6" fontWeight="700" fill="#A32D2D" fontFamily="system-ui">link</text>
+        <text x="124" y="65" fontSize="6" fontWeight="700" fill="#A32D2D" fontFamily="system-ui">buried</text>
       </g>
     </svg>
   )
@@ -91,26 +123,50 @@ function Svg02({ arrowRef }) {
 // ─── Panel 03 SVG ──────────────────────────────────────────────────────────────
 function Svg03({ notifCardRef }) {
   return (
-    <svg width="160" height="100" viewBox="0 0 160 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ display: 'block', margin: '0 auto 12px' }}>
-      {/* Phone shell — static */}
-      <rect x="35" y="2" width="90" height="96" rx="12" fill="#1a1433"/>
-      <rect x="38" y="5" width="84" height="90" rx="10" fill="#1E1545"/>
-      <rect x="75" y="12" width="10" height="8" rx="2" fill="none" stroke="#8880CC" strokeWidth="1.5"/>
-      <path d="M73 18 h14" stroke="#8880CC" strokeWidth="1.5" strokeLinecap="round"/>
-      <text x="80" y="34" textAnchor="middle" fontSize="18" fontWeight="700" fill="white" fontFamily="system-ui">9:14</text>
-      <text x="80" y="44" textAnchor="middle" fontSize="7" fill="#9990CC" fontFamily="system-ui">Monday, 9 June</text>
+    <svg width="160" height="118" viewBox="0 0 160 118" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ display: 'block', margin: '0 auto 12px' }}>
+      {/* Phone frame */}
+      <rect x="35" y="0" width="90" height="118" rx="14" fill="#0D0D0D"/>
+      {/* Screen — dark wallpaper */}
+      <rect x="37" y="2" width="86" height="114" rx="12" fill="#1A103A"/>
+      {/* Subtle wallpaper gradient suggestion */}
+      <ellipse cx="80" cy="55" rx="55" ry="40" fill="#2D1B69" fillOpacity="0.4"/>
+      {/* Punch-hole camera */}
+      <circle cx="80" cy="10" r="3" fill="#0D0D0D"/>
+      {/* Status bar */}
+      <text x="42" y="18" fontSize="5.5" fontWeight="700" fill="rgba(255,255,255,0.85)" fontFamily="system-ui">9:14</text>
+      {/* Signal bars */}
+      <rect x="104" y="15" width="2" height="2.5" rx="0.5" fill="white" fillOpacity="0.7"/>
+      <rect x="107.5" y="13.5" width="2" height="4" rx="0.5" fill="white" fillOpacity="0.7"/>
+      <rect x="111" y="12" width="2" height="5.5" rx="0.5" fill="white" fillOpacity="0.7"/>
+      {/* Battery */}
+      <rect x="115" y="13" width="8.5" height="5" rx="1" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="0.7"/>
+      <rect x="123.5" y="14.5" width="1.5" height="2" rx="0.5" fill="white" fillOpacity="0.6"/>
+      <rect x="116" y="14" width="6" height="3" rx="0.5" fill="white" fillOpacity="0.7"/>
+      {/* Time — large, centered */}
+      <text x="80" y="52" textAnchor="middle" fontSize="26" fontWeight="300" fill="white" fontFamily="system-ui" letterSpacing="-1">9:14</text>
+      <text x="80" y="62" textAnchor="middle" fontSize="7" fill="rgba(255,255,255,0.55)" fontFamily="system-ui">Monday, 9 June</text>
       {/* Notification card — animates */}
       <g ref={notifCardRef}>
-        <rect x="42" y="52" width="76" height="38" rx="8" fill="white" fillOpacity="0.12"/>
-        <rect x="46" y="57" width="12" height="12" rx="3" fill="#534AB7"/>
-        <text x="52" y="66" textAnchor="middle" fontSize="8" fill="white">⚡</text>
-        <text x="62" y="63" fontSize="6.5" fontWeight="700" fill="white" fontFamily="system-ui">QuizPulse · Ms. Santos</text>
-        <text x="62" y="72" fontSize="6" fill="#CCC" fontFamily="system-ui">Photosynthesis · 3 q's · 90 sec</text>
-        <rect x="46" y="79" width="30" height="8" rx="4" fill="white" fillOpacity="0.15"/>
-        <text x="61" y="85" textAnchor="middle" fontSize="6" fill="white" fontFamily="system-ui">Start quiz</text>
-        <rect x="79" y="79" width="22" height="8" rx="4" fill="white" fillOpacity="0.1"/>
-        <text x="90" y="85" textAnchor="middle" fontSize="6" fill="#CCC" fontFamily="system-ui">Later</text>
+        {/* Card background — frosted glass look */}
+        <rect x="40" y="70" width="80" height="40" rx="12" fill="white" fillOpacity="0.14"/>
+        <rect x="40" y="70" width="80" height="40" rx="12" stroke="white" strokeOpacity="0.08" strokeWidth="0.5"/>
+        {/* App icon */}
+        <rect x="45" y="75" width="11" height="11" rx="3" fill="#534AB7"/>
+        <text x="50.5" y="83.5" textAnchor="middle" fontSize="7" fill="white">⚡</text>
+        {/* App name + time */}
+        <text x="60" y="81" fontSize="6" fontWeight="700" fill="white" fontFamily="system-ui" letterSpacing="0.2">QUIZPULSE</text>
+        <text x="116" y="81" textAnchor="end" fontSize="5.5" fill="rgba(255,255,255,0.4)" fontFamily="system-ui">now</text>
+        {/* Notification body */}
+        <text x="45" y="91" fontSize="6.5" fontWeight="600" fill="white" fontFamily="system-ui">Ms. Santos sent a quiz</text>
+        <text x="45" y="99" fontSize="5.5" fill="rgba(255,255,255,0.6)" fontFamily="system-ui">Photosynthesis · 3 q's · ~90 sec</text>
+        {/* Divider + action buttons */}
+        <line x1="40" y1="104" x2="120" y2="104" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5"/>
+        <text x="69" y="111" textAnchor="middle" fontSize="6.5" fontWeight="600" fill="#A89EFF" fontFamily="system-ui">Start quiz</text>
+        <line x1="80" y1="104" x2="80" y2="112" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5"/>
+        <text x="100" y="111" textAnchor="middle" fontSize="6.5" fill="rgba(255,255,255,0.4)" fontFamily="system-ui">Later</text>
       </g>
+      {/* Home indicator */}
+      <rect x="58" y="113" width="44" height="2.5" rx="1.25" fill="white" fillOpacity="0.25"/>
     </svg>
   )
 }
