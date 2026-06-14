@@ -6,7 +6,7 @@
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
   color-scheme: light;
-  background: #F5F4FD;
+  background: #FBFAFE;
   color: #1a1433;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -21,15 +21,18 @@
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: light;
-    background: #F5F4FD;
+    background: #FBFAFE;
   }
 }
 
 body {
   margin: 0;
   min-height: 100svh;
-  background: radial-gradient(120% 90% at 50% 0%, #EEEDFE 0%, #F5F4FD 45%, #FBFAFE 100%);
-  background-attachment: fixed;
+  /* Solid base fills the whole document; the glow sits at the top and fades
+     out over a fixed distance, so it conforms to any page height on every
+     device. No background-attachment: fixed — it breaks on mobile. */
+  background-color: #FBFAFE;
+  background-image: radial-gradient(120% 520px at 50% 0%, #EEEDFE 0%, #F5F4FD 55%, rgba(251,250,254,0) 100%);
   background-repeat: no-repeat;
 }
 

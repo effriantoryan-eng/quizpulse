@@ -2,11 +2,16 @@
 
 ## What this project is
 
-QuizPulse is a low-stakes classroom quiz app for secondary school teachers (Years 7–12).
+QuizPulse is a low-stakes classroom quiz app for school teachers.
 This is a **teacher-only demo**: teachers create questions, build quizzes, send them to a preset class,
 and view analytics. Student responses are simulated automatically on send — no real student flow exists.
 Student view, push notifications, and other upcoming features are shown as **interactive inline mockups**
 in the Preview gallery (`/demo`).
+
+**Positioning — keep it broad.** Describe the product for "school teachers", not "secondary school"
+teachers, and avoid year-level specificity (e.g. "Years 7–12") in user-facing copy and docs. Secondary
+school is the intended initial target, but the product is not limited to it — don't bake that narrowing
+into the messaging. (The preset demo classes happen to be Years 7/9/10, which is fine as sample data.)
 
 The demo is **fully public** — no login required. Any visitor gets a stable `localStorage` UUID as their
 `teacherId`. Their data persists across page refreshes in the same browser but is isolated from all other visitors.

@@ -1,6 +1,6 @@
 # QuizPulse
 
-Low-stakes classroom quiz app for secondary school teachers (Years 7–12). Teachers create questions, build quizzes, send them to a preset class, and view analytics. Student responses are simulated automatically — no real student flow exists in the current demo.
+Low-stakes classroom quiz app for school teachers. Teachers create questions, build quizzes, send them to a preset class, and view analytics. Student responses are simulated automatically — no real student flow exists in the current demo.
 
 **Live demo:** https://mango-meadow-0a5aa7410.7.azurestaticapps.net
 
