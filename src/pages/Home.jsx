@@ -474,7 +474,7 @@ export default function Home() {
           QuizPulse
         </h1>
         <p style={{ fontSize: '16px', color: '#666', maxWidth: '420px', margin: '0 auto 28px', lineHeight: '1.6' }}>
-          Low-stakes classroom check-ins for secondary school teachers.
+          Low-stakes classroom check-ins for school teachers.
           No grades. Just participation.
         </p>
 
