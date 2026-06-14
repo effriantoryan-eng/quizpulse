@@ -11,9 +11,11 @@ import QuizHistory from './pages/teacher/QuizHistory'
 import DemoNav from './components/DemoNav'
 import AdminLog from './pages/AdminLog'
 import { usePageView } from './hooks/usePageView'
+import { useDocumentTitle } from './hooks/useDocumentTitle'
 
 function AppRoutes() {
   usePageView()
+  useDocumentTitle()
   return (
     <>
       <DemoNav />

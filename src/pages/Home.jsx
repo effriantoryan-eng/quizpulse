@@ -90,31 +90,31 @@ function Svg02({ arrowRef }) {
       <line x1="32" y1="34" x2="116" y2="34" stroke="#E5E5EA" strokeWidth="0.5"/>
 
       {/* Student bubble — left */}
-      <rect x="36" y="37" width="44" height="11" rx="5.5" fill="#E5E5EA"/>
-      <text x="58" y="45" textAnchor="middle" fontSize="5.5" fill="#333" fontFamily="system-ui">any hw tonight? 😅</text>
+      <rect x="36" y="37" width="50" height="11" rx="5.5" fill="#E5E5EA"/>
+      <text x="61" y="44.7" textAnchor="middle" fontSize="5" fill="#333" fontFamily="system-ui">any hw tonight? 😅</text>
 
       {/* Teacher link bubble — right (sent) */}
-      <rect x="72" y="51" width="40" height="17" rx="7" fill="#534AB7"/>
-      <text x="92" y="59.5" textAnchor="middle" fontSize="5.5" fontWeight="700" fill="white" fontFamily="system-ui">📋 Quiz Check-in</text>
-      <text x="92" y="66.5" textAnchor="middle" fontSize="4.5" fill="rgba(255,255,255,0.72)" fontFamily="system-ui">forms.gle/yr9quiz</text>
+      <rect x="62" y="51" width="50" height="17" rx="7" fill="#534AB7"/>
+      <text x="87" y="58.8" textAnchor="middle" fontSize="5" fontWeight="700" fill="white" fontFamily="system-ui">📋 Quiz Check-in</text>
+      <text x="87" y="65.6" textAnchor="middle" fontSize="4.3" fill="rgba(255,255,255,0.72)" fontFamily="system-ui">forms.gle/yr9quiz</text>
 
       {/* Emoji flood */}
-      <rect x="36" y="71" width="50" height="11" rx="5.5" fill="#E5E5EA"/>
-      <text x="61" y="79.5" textAnchor="middle" fontSize="8" fontFamily="system-ui">😂🔥💀😭</text>
-      <rect x="36" y="85" width="42" height="11" rx="5.5" fill="#E5E5EA"/>
-      <text x="57" y="93.5" textAnchor="middle" fontSize="8" fontFamily="system-ui">🤣😅🔥😂</text>
-      <rect x="36" y="99" width="34" height="11" rx="5.5" fill="#E5E5EA"/>
-      <text x="53" y="107.5" textAnchor="middle" fontSize="8" fontFamily="system-ui">👀💀🤣</text>
+      <rect x="36" y="71" width="40" height="11" rx="5.5" fill="#E5E5EA"/>
+      <text x="56" y="79.6" textAnchor="middle" fontSize="7" fontFamily="system-ui">😂🔥💀😭</text>
+      <rect x="36" y="85" width="40" height="11" rx="5.5" fill="#E5E5EA"/>
+      <text x="56" y="93.6" textAnchor="middle" fontSize="7" fontFamily="system-ui">🤣😅🔥😂</text>
+      <rect x="36" y="99" width="31" height="11" rx="5.5" fill="#E5E5EA"/>
+      <text x="51.5" y="107.6" textAnchor="middle" fontSize="7" fontFamily="system-ui">👀💀🤣</text>
 
       {/* Home indicator */}
       <rect x="54" y="112" width="40" height="2.5" rx="1.25" fill="#1C1C1E" opacity="0.15"/>
 
       {/* Red callout arrow — points at buried teacher link, animates */}
       <g ref={arrowRef}>
-        <line x1="122" y1="60" x2="114" y2="60" stroke="#A32D2D" strokeWidth="1.5" strokeLinecap="round"/>
-        <polygon points="112,60 116,57.5 116,62.5" fill="#A32D2D"/>
-        <text x="124" y="57" fontSize="6" fontWeight="700" fill="#A32D2D" fontFamily="system-ui">link</text>
-        <text x="124" y="65" fontSize="6" fontWeight="700" fill="#A32D2D" fontFamily="system-ui">buried</text>
+        <line x1="123" y1="59.5" x2="114" y2="59.5" stroke="#A32D2D" strokeWidth="1.5" strokeLinecap="round"/>
+        <polygon points="112,59.5 116,57 116,62" fill="#A32D2D"/>
+        <text x="125" y="57" fontSize="6" fontWeight="700" fill="#A32D2D" fontFamily="system-ui">link</text>
+        <text x="125" y="65" fontSize="6" fontWeight="700" fill="#A32D2D" fontFamily="system-ui">buried</text>
       </g>
     </svg>
   )
@@ -157,8 +157,8 @@ function Svg03({ notifCardRef }) {
         <text x="60" y="81" fontSize="6" fontWeight="700" fill="white" fontFamily="system-ui" letterSpacing="0.2">QUIZPULSE</text>
         <text x="116" y="81" textAnchor="end" fontSize="5.5" fill="rgba(255,255,255,0.4)" fontFamily="system-ui">now</text>
         {/* Notification body */}
-        <text x="45" y="91" fontSize="6.5" fontWeight="600" fill="white" fontFamily="system-ui">Ms. Santos sent a quiz</text>
-        <text x="45" y="99" fontSize="5.5" fill="rgba(255,255,255,0.6)" fontFamily="system-ui">Photosynthesis · 3 q's · ~90 sec</text>
+        <text x="45" y="91" fontSize="6" fontWeight="600" fill="white" fontFamily="system-ui">Quiz from Ms. Santos</text>
+        <text x="45" y="98.5" fontSize="5" fill="rgba(255,255,255,0.6)" fontFamily="system-ui">Photosynthesis · 3 q's · 90s</text>
         {/* Divider + action buttons */}
         <line x1="40" y1="104" x2="120" y2="104" stroke="rgba(255,255,255,0.12)" strokeWidth="0.5"/>
         <text x="69" y="111" textAnchor="middle" fontSize="6.5" fontWeight="600" fill="#A89EFF" fontFamily="system-ui">Start quiz</text>
