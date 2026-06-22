@@ -3,13 +3,16 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useHint } from '../../hooks/useHint'
 import HintBanner from '../../components/HintBanner'
 import API_BASE from '../../api'
+import { T, label, input, chip, btnPrimary, btnSecondary, tag, card } from '../../theme'
+
+const PAGE = { maxWidth: 760, margin: 0, padding: 'clamp(28px,5vw,42px) clamp(20px,5vw,52px) 80px', fontFamily: T.font }
 
 const TOPIC_COLORS = {
-  Science: { bg: '#E1F5EE', color: '#085041' },
-  History: { bg: '#FAEEDA', color: '#633806' },
+  Science:     { bg: '#E1F5EE', color: '#085041' },
+  History:     { bg: '#FAEEDA', color: '#633806' },
   Mathematics: { bg: '#E6F1FB', color: '#0C447C' },
-  English: { bg: '#FBEAF0', color: '#4B1528' },
-  Geography: { bg: '#EEEDFE', color: '#3C3489' },
+  English:     { bg: '#FBEAF0', color: '#4B1528' },
+  Geography:   { bg: T.primarySoft, color: T.text },
 }
 
 const ALLOWED_TOPICS = ['Science', 'History', 'Mathematics', 'English', 'Geography']
@@ -101,15 +104,15 @@ function QuestionBank() {
     }
   }
 
-  if (loading) return <div style={{ padding: '24px', color: '#888' }}>Loading questions...</div>
-  if (error) return <div style={{ padding: '24px', color: '#A32D2D' }}>{error}</div>
+  if (loading) return <div style={{ ...PAGE, color: T.muted }}>Loading questions...</div>
+  if (error) return <div style={{ ...PAGE, color: T.red }}>{error}</div>
 
   return (
-    <div style={{ maxWidth: 640, margin: '0 auto', padding: '24px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-        <h2 style={{ margin: 0 }}>Question bank</h2>
+    <div style={PAGE}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <h1 style={{ margin: 0 }}>Question bank</h1>
         {!hintVisible && (
-          <button onClick={showHint} style={{ background: 'none', border: '1px solid #C5C0F0', borderRadius: '50%', width: '26px', height: '26px', cursor: 'pointer', color: '#7B6EDE', fontSize: '13px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>?</button>
+          <button onClick={showHint} style={{ background: T.surface, border: `${T.bw} solid ${T.border}`, borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', color: T.text, fontSize: '14px', fontWeight: 700, flexShrink: 0 }}>?</button>
         )}
       </div>
       {hintVisible && (
@@ -120,59 +123,46 @@ function QuestionBank() {
       )}
 
       {questions.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '48px', color: '#aaa', fontSize: '14px' }}>
+        <div style={{ textAlign: 'center', padding: '48px', color: T.muted, fontSize: '15px', ...card }}>
           No questions yet. Go to Create Question to add some.
         </div>
       ) : (
         <>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              {topics.map(t => (
-                <button
-                  key={t}
-                  onClick={() => setFilter(t)}
-                  style={{
-                    padding: '5px 12px', borderRadius: '20px', border: '1px solid',
-                    borderColor: filter === t ? '#534AB7' : '#ddd',
-                    background: filter === t ? '#534AB7' : 'white',
-                    color: filter === t ? 'white' : '#555',
-                    cursor: 'pointer', fontSize: '12px',
-                    fontWeight: filter === t ? '500' : '400'
-                  }}
-                >
-                  {t} ({t === 'All' ? questions.length : questions.filter(q => q.topic === t).length})
-                </button>
-              ))}
-            </div>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '20px' }}>
+            {topics.map(t => (
+              <button key={t} onClick={() => setFilter(t)} style={chip(filter === t)}>
+                {t} ({t === 'All' ? questions.length : questions.filter(q => q.topic === t).length})
+              </button>
+            ))}
           </div>
 
           {filtered.map(q => {
-            const topicStyle = TOPIC_COLORS[q.topic] || { bg: '#EEEDFE', color: '#3C3489' }
+            const topicStyle = TOPIC_COLORS[q.topic] || { bg: T.primarySoft, color: T.text }
             const isSelected = selected.includes(q.id)
             const isEditing = editingId === q.id
 
             if (isEditing) {
               return (
-                <div key={q.id} style={{ padding: '16px', marginBottom: '10px', border: '2px solid #534AB7', borderRadius: '10px', background: '#FAFAFE' }}>
-                  <div style={{ marginBottom: '10px' }}>
-                    <label style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#888', display: 'block', marginBottom: '4px' }}>Question</label>
+                <div key={q.id} style={{ padding: '18px', marginBottom: '12px', border: `${T.bw} solid ${T.primary}`, borderRadius: T.radius, background: T.surface, boxShadow: T.shadow }}>
+                  <div style={{ marginBottom: '14px' }}>
+                    <label style={label}>Question</label>
                     <textarea
                       value={editForm.text}
                       onChange={e => setEditForm(f => ({ ...f, text: e.target.value }))}
                       rows={2}
-                      style={{ width: '100%', padding: '8px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ddd', boxSizing: 'border-box', resize: 'vertical' }}
+                      style={{ ...input, resize: 'vertical' }}
                     />
                   </div>
-                  <div style={{ marginBottom: '10px' }}>
-                    <label style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#888', display: 'block', marginBottom: '4px' }}>Options (select correct answer)</label>
+                  <div style={{ marginBottom: '14px' }}>
+                    <label style={label}>Options (select correct answer)</label>
                     {editForm.options.map((opt, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                         <input
                           type="radio"
                           name={`correct-${q.id}`}
                           checked={editForm.correctIndex === i}
                           onChange={() => setEditForm(f => ({ ...f, correctIndex: i }))}
-                          style={{ accentColor: '#534AB7' }}
+                          style={{ accentColor: T.primary, width: '18px', height: '18px' }}
                         />
                         <input
                           value={opt}
@@ -181,38 +171,29 @@ function QuestionBank() {
                             opts[i] = e.target.value
                             setEditForm(f => ({ ...f, options: opts }))
                           }}
-                          style={{ flex: 1, padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: `1px solid ${editForm.correctIndex === i ? '#534AB7' : '#ddd'}` }}
+                          style={{ ...input, flex: 1, border: `2px solid ${editForm.correctIndex === i ? T.primary : T.border}` }}
                         />
                       </div>
                     ))}
                   </div>
-                  <div style={{ marginBottom: '12px' }}>
-                    <label style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#888', display: 'block', marginBottom: '4px' }}>Topic</label>
+                  <div style={{ marginBottom: '16px' }}>
+                    <label style={label}>Topic</label>
                     <select
                       value={editForm.topic}
                       onChange={e => setEditForm(f => ({ ...f, topic: e.target.value }))}
-                      style={{ padding: '6px 8px', fontSize: '13px', borderRadius: '6px', border: '1px solid #ddd' }}
+                      style={{ ...input, width: 'auto', fontWeight: 600 }}
                     >
                       {ALLOWED_TOPICS.map(t => <option key={t}>{t}</option>)}
                     </select>
                   </div>
                   {editError && (
-                    <div style={{ fontSize: '12px', color: '#c0392b', marginBottom: '10px' }}>{editError}</div>
+                    <div style={{ fontSize: '13px', color: T.red, marginBottom: '12px', fontWeight: 600 }}>{editError}</div>
                   )}
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                      onClick={() => saveEdit(q.id)}
-                      disabled={saving}
-                      style={{ padding: '7px 16px', background: saving ? '#ccc' : '#534AB7', color: 'white', border: 'none', borderRadius: '6px', fontSize: '13px', cursor: saving ? 'not-allowed' : 'pointer' }}
-                    >
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <button onClick={() => saveEdit(q.id)} disabled={saving} style={{ ...btnPrimary(saving), padding: '10px 20px', fontSize: '14px' }}>
                       {saving ? 'Saving…' : 'Save'}
                     </button>
-                    <button
-                      onClick={cancelEdit}
-                      style={{ padding: '7px 16px', background: 'white', color: '#555', border: '1px solid #ddd', borderRadius: '6px', fontSize: '13px', cursor: 'pointer' }}
-                    >
-                      Cancel
-                    </button>
+                    <button onClick={cancelEdit} style={{ ...btnSecondary(), padding: '10px 18px', fontSize: '14px' }}>Cancel</button>
                   </div>
                 </div>
               )
@@ -224,53 +205,39 @@ function QuestionBank() {
                 onClick={() => toggleSelect(q.id)}
                 style={{
                   display: 'flex', alignItems: 'flex-start', gap: '12px',
-                  padding: '14px 16px', marginBottom: '10px',
-                  border: `1px solid ${isSelected ? '#534AB7' : '#e0e0e0'}`,
-                  borderRadius: '10px',
-                  background: isSelected ? '#EEEDFE22' : 'white',
-                  cursor: 'pointer'
+                  padding: '16px 18px', marginBottom: '12px',
+                  border: `${T.bw} solid ${T.border}`,
+                  borderRadius: T.radius,
+                  background: isSelected ? T.primarySoft : T.surface,
+                  boxShadow: T.shadowField,
+                  cursor: 'pointer',
                 }}
               >
                 <input
                   type="checkbox"
                   checked={isSelected}
                   onChange={() => toggleSelect(q.id)}
-                  style={{ marginTop: '3px', accentColor: '#534AB7' }}
+                  style={{ marginTop: '3px', accentColor: T.primary, width: '18px', height: '18px', flexShrink: 0 }}
                 />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '14px', marginBottom: '6px', lineHeight: '1.5' }}>{q.text}</div>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '20px', background: topicStyle.bg, color: topicStyle.color }}>{q.topic}</span>
-                    <span style={{ fontSize: '11px', color: '#aaa' }}>{q.options?.length || 4} options</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '15px', marginBottom: '8px', lineHeight: 1.5, fontWeight: 500 }}>{q.text}</div>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <span style={tag(topicStyle.bg, topicStyle.color)}>{q.topic}</span>
+                    <span style={{ fontSize: '12px', color: T.muted }}>{q.options?.length || 4} options</span>
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                  <button
-                    onClick={e => startEdit(q, e)}
-                    style={{ padding: '4px 10px', fontSize: '12px', background: 'white', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer', color: '#555' }}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={e => deleteQuestion(q.id, e)}
-                    style={{ padding: '4px 10px', fontSize: '12px', background: 'white', border: '1px solid #ddd', borderRadius: '6px', cursor: 'pointer', color: '#c0392b' }}
-                  >
-                    Delete
-                  </button>
+                <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                  <button onClick={e => startEdit(q, e)} style={{ ...btnSecondary(), padding: '6px 12px', fontSize: '13px' }}>Edit</button>
+                  <button onClick={e => deleteQuestion(q.id, e)} style={{ ...btnSecondary(), padding: '6px 12px', fontSize: '13px', color: T.red }}>Delete</button>
                 </div>
               </div>
             )
           })}
 
           {selected.length > 0 && (
-            <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '13px', color: '#666' }}>{selected.length} question{selected.length > 1 ? 's' : ''} selected</span>
-              <button
-                style={{ padding: '8px 18px', background: '#534AB7', color: 'white', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '500', cursor: 'pointer' }}
-                onClick={() => alert('Add to quiz — coming soon')}
-              >
-                Add to quiz →
-              </button>
+            <div style={{ marginTop: '20px', paddingTop: '18px', borderTop: `${T.bw} solid ${T.border}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+              <span style={{ fontSize: '14px', color: T.text, fontWeight: 600 }}>{selected.length} question{selected.length > 1 ? 's' : ''} selected</span>
+              <button style={btnPrimary()} onClick={() => alert('Add to quiz — coming soon')}>Add to quiz →</button>
             </div>
           )}
         </>

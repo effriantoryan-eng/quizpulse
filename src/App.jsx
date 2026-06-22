@@ -17,20 +17,22 @@ function AppRoutes() {
   usePageView()
   useDocumentTitle()
   return (
-    <>
+    <div className="qp-shell">
       <DemoNav />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/demo" element={<DemoGallery />} />
-        <Route path="/teacher/create" element={<CreateQuestion />} />
-        <Route path="/teacher/bank" element={<QuestionBank />} />
-        <Route path="/teacher/build" element={<BuildQuiz />} />
-        <Route path="/teacher/send" element={<SendQuiz />} />
-        <Route path="/teacher/quizzes" element={<QuizHistory />} />
-        <Route path="/teacher/analytics/:quizId" element={<Analytics />} />
-        <Route path="/admin/log" element={<AdminLog />} />
-      </Routes>
-    </>
+      <main className="qp-content">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/demo" element={<DemoGallery />} />
+          <Route path="/teacher/create" element={<CreateQuestion />} />
+          <Route path="/teacher/bank" element={<QuestionBank />} />
+          <Route path="/teacher/build" element={<BuildQuiz />} />
+          <Route path="/teacher/send" element={<SendQuiz />} />
+          <Route path="/teacher/quizzes" element={<QuizHistory />} />
+          <Route path="/teacher/analytics/:quizId" element={<Analytics />} />
+          <Route path="/admin/log" element={<AdminLog />} />
+        </Routes>
+      </main>
+    </div>
   )
 }
 

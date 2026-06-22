@@ -4,6 +4,9 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useHint } from '../../hooks/useHint'
 import HintBanner from '../../components/HintBanner'
 import API_BASE from '../../api'
+import { T, label, btnPrimary, btnSecondary, tag } from '../../theme'
+
+const PAGE = { maxWidth: 560, margin: 0, padding: 'clamp(28px,5vw,42px) clamp(20px,5vw,52px) 80px', fontFamily: T.font }
 
 const PRESET_CLASSES = [
   { id: 'yr9-sci',  name: 'Year 9 Science',  students: 28, topic: 'Science'     },
@@ -32,17 +35,12 @@ function SendQuiz() {
 
   if (!quizName || questionIds.length === 0) {
     return (
-      <div style={{ maxWidth: 480, margin: '0 auto', padding: '24px' }}>
-        <h2 style={{ marginBottom: '16px' }}>Send quiz</h2>
-        <p style={{ fontSize: '14px', color: '#888', marginBottom: '16px' }}>
+      <div style={PAGE}>
+        <h1 style={{ marginBottom: '16px' }}>Send quiz</h1>
+        <p style={{ fontSize: '15px', color: T.muted, marginBottom: '20px' }}>
           No quiz to send. Please build a quiz first.
         </p>
-        <button
-          onClick={() => navigate('/teacher/build')}
-          style={{ padding: '10px 20px', background: '#534AB7', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', cursor: 'pointer' }}
-        >
-          Go to Build quiz
-        </button>
+        <button onClick={() => navigate('/teacher/build')} style={btnPrimary()}>Go to Build quiz</button>
       </div>
     )
   }
@@ -61,7 +59,6 @@ function SendQuiz() {
     setError(null)
     setSending(true)
     try {
-      // 1. Save the quiz
       setSimulatingMsg('Saving quiz…')
       const quizRes = await fetch(`${API_BASE}/quizzes`, {
         method: 'POST',
@@ -79,7 +76,6 @@ function SendQuiz() {
       if (!quizRes.ok) throw new Error(`Quiz save failed (${quizRes.status})`)
       const quiz = await quizRes.json()
 
-      // 2. Simulate responses server-side
       setSimulatingMsg(`Simulating ${totalStudents} student responses…`)
       const simRes = await fetch(`${API_BASE}/simulate`, {
         method: 'POST',
@@ -103,11 +99,11 @@ function SendQuiz() {
   }
 
   return (
-    <div style={{ maxWidth: 480, margin: '0 auto', padding: '24px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-        <h2 style={{ margin: 0 }}>Send quiz</h2>
+    <div style={PAGE}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <h1 style={{ margin: 0 }}>Send quiz</h1>
         {!hintVisible && (
-          <button onClick={showHint} style={{ background: 'none', border: '1px solid #C5C0F0', borderRadius: '50%', width: '26px', height: '26px', cursor: 'pointer', color: '#7B6EDE', fontSize: '13px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>?</button>
+          <button onClick={showHint} style={{ background: T.surface, border: `${T.bw} solid ${T.border}`, borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', color: T.text, fontSize: '14px', fontWeight: 700, flexShrink: 0 }}>?</button>
         )}
       </div>
       {hintVisible && (
@@ -118,124 +114,105 @@ function SendQuiz() {
       )}
 
       {/* Quiz summary */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 18px', background: '#f8f8f8', borderRadius: '10px', marginBottom: '24px', border: '1px solid #eee' }}>
-        <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: '#EEEDFE', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '18px' }}>📋</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 18px', background: T.surface, borderRadius: T.radius, marginBottom: '28px', border: `${T.bw} solid ${T.border}`, boxShadow: T.shadow }}>
+        <div style={{ width: '40px', height: '40px', borderRadius: T.radiusSm, background: T.primarySoft, border: `2px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '18px' }}>📋</div>
         <div>
-          <div style={{ fontSize: '14px', fontWeight: '500' }}>{quizName}</div>
-          <div style={{ fontSize: '12px', color: '#888' }}>{questionIds.length} question{questionIds.length !== 1 ? 's' : ''}</div>
+          <div style={{ fontSize: '15px', fontWeight: 700 }}>{quizName}</div>
+          <div style={{ fontSize: '13px', color: T.muted }}>{questionIds.length} question{questionIds.length !== 1 ? 's' : ''}</div>
         </div>
       </div>
 
       {sentResult ? (
         /* Success state */
-        <div style={{ background: '#E1F5EE', border: '1px solid #1a7a5e', borderRadius: '10px', padding: '24px' }}>
-          <div style={{ fontSize: '22px', marginBottom: '10px' }}>🎉</div>
-          <div style={{ fontSize: '16px', fontWeight: '600', color: '#085041', marginBottom: '8px' }}>Quiz sent!</div>
-          <div style={{ fontSize: '13px', color: '#085041', marginBottom: '6px' }}>
+        <div style={{ background: T.primarySoft, border: `${T.bw} solid ${T.border}`, borderRadius: T.radius, boxShadow: T.shadow, padding: '24px' }}>
+          <div style={{ fontSize: '24px', marginBottom: '10px' }}>🎉</div>
+          <div style={{ fontSize: '18px', fontWeight: 700, color: T.text, marginBottom: '8px' }}>Quiz sent!</div>
+          <div style={{ fontSize: '14px', color: T.text, marginBottom: '6px' }}>
             <strong>{sentResult.generated}</strong> simulated responses received.
           </div>
-          <div style={{ fontSize: '12px', color: '#3a7a65', marginBottom: '20px' }}>
+          <div style={{ fontSize: '13px', color: T.muted, marginBottom: '20px' }}>
             Responses were automatically generated to simulate a real class submission.
           </div>
-          <button
-            onClick={() => navigate(`/teacher/analytics/${sentResult.quizId}`)}
-            style={{ width: '100%', padding: '11px', background: '#085041', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }}
-          >
+          <button onClick={() => navigate(`/teacher/analytics/${sentResult.quizId}`)} style={{ ...btnPrimary(), width: '100%' }}>
             View analytics →
           </button>
-          <button
-            onClick={() => navigate('/teacher/quizzes')}
-            style={{ width: '100%', marginTop: '8px', padding: '11px', background: 'white', color: '#085041', border: '1px solid #085041', borderRadius: '8px', fontSize: '14px', cursor: 'pointer' }}
-          >
+          <button onClick={() => navigate('/teacher/quizzes')} style={{ ...btnSecondary(), width: '100%', marginTop: '10px' }}>
             All quizzes
           </button>
         </div>
       ) : (
         <>
           {/* Class selector */}
-          <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: '#888', marginBottom: '10px' }}>Send to class</div>
+          <label style={label}>Send to class</label>
 
           {PRESET_CLASSES.map(c => {
             const isSelected = selectedClasses.includes(c.id)
-            const topicStyle = TOPIC_COLORS[c.topic] || { bg: '#EEEDFE', color: '#3C3489' }
+            const topicStyle = TOPIC_COLORS[c.topic] || { bg: T.primarySoft, color: T.text }
             return (
               <div
                 key={c.id}
                 onClick={() => toggleClass(c.id)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '12px',
-                  padding: '12px 14px', marginBottom: '8px',
-                  border: `${isSelected ? '2px' : '1px'} solid ${isSelected ? '#534AB7' : '#e0e0e0'}`,
-                  borderRadius: '8px', background: isSelected ? '#EEEDFE11' : 'white',
-                  cursor: 'pointer', transition: 'all 0.15s',
+                  padding: '12px 14px', marginBottom: '10px',
+                  border: `${T.bw} solid ${isSelected ? T.primary : T.border}`,
+                  borderRadius: T.radius, background: isSelected ? T.primarySoft : T.surface,
+                  boxShadow: isSelected ? 'none' : T.shadowField, cursor: 'pointer',
                 }}
               >
                 <div style={{
-                  width: '20px', height: '20px', borderRadius: '50%',
-                  border: `1px solid ${isSelected ? '#534AB7' : '#ccc'}`,
-                  background: isSelected ? '#534AB7' : 'white',
+                  width: '22px', height: '22px', borderRadius: '50%',
+                  border: `2px solid ${isSelected ? T.primary : T.border}`,
+                  background: isSelected ? T.primary : T.surface,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0, fontSize: '12px', color: 'white',
+                  flexShrink: 0, fontSize: '12px', color: 'white', fontWeight: 700,
                 }}>
                   {isSelected ? '✓' : ''}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '14px', fontWeight: '500' }}>{c.name}</div>
-                  <div style={{ fontSize: '12px', color: '#888' }}>{c.students} students</div>
+                  <div style={{ fontSize: '15px', fontWeight: 700 }}>{c.name}</div>
+                  <div style={{ fontSize: '13px', color: T.muted }}>{c.students} students</div>
                 </div>
-                <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '20px', background: topicStyle.bg, color: topicStyle.color }}>{c.topic}</span>
+                <span style={tag(topicStyle.bg, topicStyle.color)}>{c.topic}</span>
               </div>
             )
           })}
 
           {/* Timing — send now only; schedule is post-MVP */}
-          <div style={{ borderTop: '1px solid #eee', margin: '20px 0' }}></div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '24px' }}>
-            <div style={{
-              padding: '14px', textAlign: 'center', borderRadius: '8px',
-              border: '2px solid #534AB7', background: '#EEEDFE22',
-            }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', margin: '24px 0' }}>
+            <div style={{ padding: '14px', textAlign: 'center', borderRadius: T.radius, border: `${T.bw} solid ${T.primary}`, background: T.primarySoft }}>
               <div style={{ fontSize: '20px', marginBottom: '6px' }}>📤</div>
-              <div style={{ fontSize: '13px', fontWeight: '500', color: '#534AB7' }}>Send now</div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: T.text }}>Send now</div>
             </div>
-            <div style={{
-              padding: '14px', textAlign: 'center', borderRadius: '8px',
-              border: '1px solid #e0e0e0', background: '#fafafa', opacity: 0.5,
-            }}>
+            <div style={{ padding: '14px', textAlign: 'center', borderRadius: T.radius, border: `${T.bw} solid ${T.border}`, background: T.surface, opacity: 0.5 }}>
               <div style={{ fontSize: '20px', marginBottom: '6px' }}>🕐</div>
-              <div style={{ fontSize: '13px', fontWeight: '500', color: '#aaa' }}>Schedule</div>
-              <div style={{ fontSize: '11px', color: '#bbb' }}>Coming soon</div>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: T.muted }}>Schedule</div>
+              <div style={{ fontSize: '11px', color: T.muted }}>Coming soon</div>
             </div>
           </div>
 
           {sending && simulatingMsg && (
-            <div style={{ padding: '10px 14px', background: '#EEEDFE', border: '1px solid #c5c0f0', borderRadius: '8px', fontSize: '13px', color: '#534AB7', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ padding: '14px 18px', background: T.primarySoft, border: `${T.bw} solid ${T.border}`, borderRadius: T.radius, fontSize: '14px', color: T.text, marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600 }}>
               <span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⏳</span>
               {simulatingMsg}
             </div>
           )}
 
           {error && (
-            <div style={{ padding: '10px 14px', background: '#fdecea', border: '1px solid #c0392b', borderRadius: '8px', fontSize: '13px', color: '#c0392b', marginBottom: '16px' }}>
+            <div style={{ padding: '14px 18px', background: T.redSoft, border: `${T.bw} solid ${T.border}`, borderRadius: T.radius, fontSize: '14px', color: T.red, marginBottom: '16px', fontWeight: 600 }}>
               {error}
             </div>
           )}
 
           <button
             disabled={selectedClasses.length === 0 || sending}
-            style={{
-              width: '100%', padding: '12px',
-              background: selectedClasses.length === 0 || sending ? '#ccc' : '#534AB7',
-              color: 'white', border: 'none', borderRadius: '8px',
-              fontSize: '15px', fontWeight: '500',
-              cursor: selectedClasses.length === 0 || sending ? 'not-allowed' : 'pointer',
-            }}
+            style={{ ...btnPrimary(selectedClasses.length === 0 || sending), width: '100%' }}
             onClick={handleSend}
           >
             {sending ? 'Working…' : `Send to ${totalStudents} students →`}
           </button>
 
-          <p style={{ fontSize: '12px', color: '#aaa', textAlign: 'center', marginTop: '10px' }}>
+          <p style={{ fontSize: '13px', color: T.muted, textAlign: 'center', marginTop: '12px' }}>
             Responses will be simulated automatically so you can view analytics right away.
           </p>
         </>

@@ -2,18 +2,18 @@ import { useState, useEffect } from 'react'
 
 // ─── Design tokens ────────────────────────────────────────────────
 const C = {
-  purple:      '#534AB7',
-  purpleLight: '#EEEDFE',
-  purpleMid:   '#7B6EDE',
-  purpleDark:  '#1a1433',
-  green:       '#3B6D11',
-  greenLight:  '#EAF3DE',
+  purple:      '#ff2e63',
+  purpleLight: '#ffe14d',
+  purpleMid:   '#ff8a00',
+  purpleDark:  '#141414',
+  green:       '#2f7d12',
+  greenLight:  '#eaf6dd',
   red:         '#A32D2D',
   redLight:    '#FCEBEB',
-  border:      '#eee',
-  text:        '#1a1433',
-  sub:         '#666',
-  muted:       '#aaa',
+  border:      '#111111',
+  text:        '#141414',
+  sub:         '#6b6b6b',
+  muted:       '#8a8175',
 }
 
 function useWindowWidth() {
@@ -282,7 +282,7 @@ const ANALYTICS_DATA = [
   },
 ]
 
-const BAR_COLOURS = [C.purpleMid, '#9B93E8', '#C5C0F0', '#DDD9FF']
+const BAR_COLOURS = [C.purple, '#ff8a00', '#ffb800', '#ffe14d']
 
 function Card2() {
   const [qIdx, setQIdx] = useState(0)
