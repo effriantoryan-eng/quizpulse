@@ -1,77 +1,100 @@
 import { useNavigate, useLocation } from 'react-router-dom'
+import { T } from '../theme'
 
-const STATIC_PAGES = [
-  { label: '🏠 Home',              path: '/'                  },
-  { label: '✏️ Create Question',  path: '/teacher/create'    },
-  { label: '🗂 Question Bank',    path: '/teacher/bank'      },
-  { label: '🔧 Build Quiz',       path: '/teacher/build'     },
-  { label: '📤 Send Quiz',        path: '/teacher/send'      },
-  { label: '📊 My Quizzes',       path: '/teacher/quizzes'   },
+// Inline stroke icons (Feather-style), sized 17px to match the handoff.
+const I = {
+  home:   <path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5Z" />,
+  create: <><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" /></>,
+  bank:   <><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></>,
+  build:  <><line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" /><line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" /><line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" /><line x1="1" y1="14" x2="7" y2="14" /><line x1="9" y1="8" x2="15" y2="8" /><line x1="17" y1="16" x2="23" y2="16" /></>,
+  send:   <><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></>,
+  quizzes:<><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></>,
+  preview:<><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" /><circle cx="12" cy="12" r="3" /></>,
+}
+
+const PAGES = [
+  { label: 'Home',            icon: I.home,    path: '/'                },
+  { label: 'Create Question', icon: I.create,  path: '/teacher/create'  },
+  { label: 'Question Bank',   icon: I.bank,    path: '/teacher/bank'    },
+  { label: 'Build Quiz',      icon: I.build,   path: '/teacher/build'   },
+  { label: 'Send Quiz',       icon: I.send,    path: '/teacher/send'    },
+  { label: 'My Quizzes',      icon: I.quizzes, path: '/teacher/quizzes' },
+  { label: 'Preview',         icon: I.preview, path: '/demo'            },
 ]
+
+function Icon({ children }) {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+         style={{ flexShrink: 0 }} aria-hidden="true">
+      {children}
+    </svg>
+  )
+}
 
 export default function DemoNav() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  const pages = [
-    ...STATIC_PAGES,
-    { label: '🖼 Preview', path: '/demo' },
-  ]
 
   return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: '6px',
-      padding: '10px 20px',
-      background: '#1a1433',
-      borderBottom: '1px solid rgba(255,255,255,0.08)',
-      flexWrap: 'wrap',
+    <aside className="qp-sidebar" style={{
+      width: '252px',
+      flex: 'none',
+      minHeight: '100vh',
+      position: 'sticky',
+      top: 0,
+      background: T.navBg,
+      padding: '22px 16px',
+      fontFamily: T.font,
     }}>
-      {/* Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginRight: '12px' }}>
+      {/* Brand row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '11px', padding: '4px 8px 22px', cursor: 'pointer' }}
+           onClick={() => navigate('/')}>
         <div style={{
-          width: '26px', height: '26px', borderRadius: '6px',
-          background: '#534AB7', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '13px', cursor: 'pointer',
-        }} onClick={() => navigate('/')}>⚡</div>
-        <span style={{ color: 'white', fontWeight: '600', fontSize: '14px', letterSpacing: '-0.3px' }}>
+          width: '34px', height: '34px', borderRadius: '9px', background: T.logoGrad,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
+            <path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z" />
+          </svg>
+        </div>
+        <span style={{ fontWeight: 800, fontSize: '18px', color: T.navText, letterSpacing: '-0.01em' }}>
           QuizPulse
         </span>
         <span style={{
-          fontSize: '10px', padding: '2px 7px', borderRadius: '20px',
-          background: 'rgba(83,74,183,0.4)', color: '#AFA9EC',
-          fontWeight: '500', letterSpacing: '0.5px', textTransform: 'uppercase',
-        }}>demo</span>
+          fontSize: '10px', fontWeight: 700, padding: '3px 7px', borderRadius: '5px',
+          background: T.badgeBg, color: T.badgeText, textTransform: 'lowercase',
+        }}>beta</span>
       </div>
 
-      {/* Nav buttons */}
-      {pages.map(({ label, path }) => {
-        const disabled = !path
-        const active = path && (pathname === path || (path !== '/' && pathname.startsWith(path.split('/').slice(0, 3).join('/'))))
-        return (
-          <button
-            key={label}
-            onClick={() => path && navigate(path)}
-            disabled={disabled}
-            style={{
-              padding: '5px 12px',
-              borderRadius: '6px',
-              border: active ? '1px solid rgba(83,74,183,0.8)' : '1px solid rgba(255,255,255,0.1)',
-              background: active ? 'rgba(83,74,183,0.35)' : 'transparent',
-              color: active ? 'white' : disabled ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.55)',
-              fontSize: '12px',
-              fontWeight: active ? '500' : '400',
-              cursor: disabled ? 'not-allowed' : 'pointer',
-              transition: 'all 0.15s',
-              whiteSpace: 'nowrap',
-            }}
-            onMouseEnter={e => { if (!active && !disabled) e.target.style.color = 'rgba(255,255,255,0.85)' }}
-            onMouseLeave={e => { if (!active && !disabled) e.target.style.color = 'rgba(255,255,255,0.55)' }}
-          >
-            {label}
-          </button>
-        )
-      })}
-    </div>
+      {/* Nav items */}
+      <nav className="qp-sidebar-nav" style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+        {PAGES.map(({ label, icon, path }) => {
+          const active = pathname === path ||
+            (path !== '/' && pathname.startsWith(path))
+          return (
+            <button
+              key={label}
+              onClick={() => navigate(path)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '11px',
+                padding: '10px 12px', borderRadius: '6px', border: 'none',
+                cursor: 'pointer', textAlign: 'left',
+                fontFamily: T.font, fontSize: '14px',
+                fontWeight: active ? 700 : 600,
+                background: active ? T.navActiveBg : 'transparent',
+                color: active ? T.navActiveText : T.navMuted,
+                boxShadow: active ? T.navActiveShadow : 'none',
+              }}
+              onMouseEnter={e => { if (!active) e.currentTarget.style.color = '#ffffff' }}
+              onMouseLeave={e => { if (!active) e.currentTarget.style.color = T.navMuted }}
+            >
+              <Icon>{icon}</Icon>
+              {label}
+            </button>
+          )
+        })}
+      </nav>
+    </aside>
   )
 }

@@ -16,8 +16,8 @@ function Section({ title, count, rows, columns, truncatedAt }) {
         onClick={() => setOpen(o => !o)}
         style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', marginBottom: '10px' }}
       >
-        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '600', color: '#1a1433' }}>{title}</h3>
-        <span style={{ fontSize: '12px', background: '#EEEDFE', color: '#534AB7', borderRadius: '12px', padding: '2px 8px', fontWeight: '500' }}>
+        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '600', color: '#141414' }}>{title}</h3>
+        <span style={{ fontSize: '12px', background: '#ffe14d', color: '#ff2e63', borderRadius: '12px', padding: '2px 8px', fontWeight: '500' }}>
           {count}{count >= truncatedAt ? '+' : ''}
         </span>
         <span style={{ fontSize: '12px', color: '#aaa', marginLeft: 'auto' }}>{open ? '▲ collapse' : '▼ expand'}</span>
@@ -143,28 +143,28 @@ export default function AdminLog() {
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px' }}>
-      <div style={{ background: '#1a1433', borderRadius: '14px', padding: '24px 28px', marginBottom: '28px', color: 'white' }}>
+      <div style={{ background: '#141414', borderRadius: '14px', padding: '24px 28px', marginBottom: '28px', color: 'white' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <div style={{ fontSize: '11px', fontWeight: '600', letterSpacing: '0.08em', color: '#9b93e8', textTransform: 'uppercase', marginBottom: '6px' }}>
+            <div style={{ fontSize: '11px', fontWeight: '600', letterSpacing: '0.08em', color: '#ffd000', textTransform: 'uppercase', marginBottom: '6px' }}>
               QuizPulse — Admin
             </div>
             <h2 style={{ margin: '0 0 6px', fontSize: '22px', fontWeight: '700', color: 'white' }}>Usage log</h2>
-            <p style={{ margin: '0', fontSize: '13px', color: '#b0a8e0', lineHeight: '1.5' }}>
+            <p style={{ margin: '0', fontSize: '13px', color: '#cfc7a8', lineHeight: '1.5' }}>
               Raw historic data across all visitors. Each browser session generates a unique teacher ID stored in localStorage.
               Data is never deleted — records accumulate from all demo users since launch.
             </p>
           </div>
           <div style={{ textAlign: 'right', flexShrink: 0 }}>
-            <div style={{ fontSize: '11px', color: '#9b93e8', marginBottom: '4px' }}>Retrieved</div>
+            <div style={{ fontSize: '11px', color: '#ffd000', marginBottom: '4px' }}>Retrieved</div>
             <div style={{ fontSize: '13px', color: 'white', fontWeight: '500' }}>{formatDate(data.retrievedAt)}</div>
-            <div style={{ fontSize: '11px', color: '#9b93e8', marginTop: '8px', marginBottom: '4px' }}>Unique teachers</div>
-            <div style={{ fontSize: '20px', color: '#a78bfa', fontWeight: '700' }}>{uniqueTeachers}</div>
-            <div style={{ fontSize: '11px', color: '#9b93e8', marginTop: '8px', marginBottom: '4px' }}>Unique sessions</div>
-            <div style={{ fontSize: '20px', color: '#a78bfa', fontWeight: '700' }}>{uniqueSessions}</div>
+            <div style={{ fontSize: '11px', color: '#ffd000', marginTop: '8px', marginBottom: '4px' }}>Unique teachers</div>
+            <div style={{ fontSize: '20px', color: '#ffd000', fontWeight: '700' }}>{uniqueTeachers}</div>
+            <div style={{ fontSize: '11px', color: '#ffd000', marginTop: '8px', marginBottom: '4px' }}>Unique sessions</div>
+            <div style={{ fontSize: '20px', color: '#ffd000', fontWeight: '700' }}>{uniqueSessions}</div>
           </div>
         </div>
-        <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '11px', color: '#9b93e8' }}>
+        <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '11px', color: '#ffd000' }}>
           Rows capped at {data.truncatedAt} per table · Secured by Azure Function key · Not linked from public nav
         </div>
       </div>
@@ -176,9 +176,9 @@ export default function AdminLog() {
           { label: 'Quizzes',    value: data.counts.quizzes },
           { label: 'Responses',  value: data.counts.responses },
         ].map(({ label, value }) => (
-          <div key={label} style={{ flex: 1, minWidth: '100px', background: '#EEEDFE', borderRadius: '10px', padding: '16px 20px' }}>
-            <div style={{ fontSize: '24px', fontWeight: '700', color: '#534AB7' }}>{value}</div>
-            <div style={{ fontSize: '12px', color: '#7a72c9', marginTop: '2px' }}>{label}</div>
+          <div key={label} style={{ flex: 1, minWidth: '100px', background: '#ffe14d', borderRadius: '10px', padding: '16px 20px' }}>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#ff2e63' }}>{value}</div>
+            <div style={{ fontSize: '12px', color: '#6b6b6b', marginTop: '2px' }}>{label}</div>
           </div>
         ))}
       </div>

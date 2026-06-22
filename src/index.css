@@ -1,39 +1,33 @@
 :root {
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --sans: 'Space Grotesk', system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: 'Space Grotesk', system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
+  --text-h: #141414;
+
+  font: 16px/1.5 var(--sans);
+  letter-spacing: 0;
   color-scheme: light;
-  background: #FBFAFE;
-  color: #1a1433;
+  background: #fff8ec;
+  color: #141414;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: light;
-    background: #FBFAFE;
+    background: #fff8ec;
   }
 }
 
 body {
   margin: 0;
   min-height: 100svh;
-  /* Solid base fills the whole document; the glow sits at the top and fades
-     out over a fixed distance, so it conforms to any page height on every
-     device. No background-attachment: fixed — it breaks on mobile. */
-  background-color: #FBFAFE;
-  background-image: radial-gradient(120% 520px at 50% 0%, #EEEDFE 0%, #F5F4FD 55%, rgba(251,250,254,0) 100%);
-  background-repeat: no-repeat;
+  /* Bold Pop: flat warm-cream page, no gradient glow. */
+  background-color: #fff8ec;
 }
 
 #root {
@@ -47,31 +41,28 @@ body {
 h1,
 h2 {
   font-family: var(--heading);
-  font-weight: 500;
+  font-weight: 700;
   color: var(--text-h);
+  letter-spacing: -0.02em;
 }
 
 h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
+  font-size: 46px;
+  line-height: 1.05;
+  margin: 0 0 16px;
+}
+@media (max-width: 1024px) {
+  h1 { font-size: 34px; }
 }
 h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
+  font-size: 28px;
+  line-height: 1.1;
   margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
 }
-p {
-  margin: 0;
+@media (max-width: 1024px) {
+  h2 { font-size: 22px; }
 }
+p { margin: 0; }
 
 code,
 .counter {
@@ -85,5 +76,43 @@ code {
   font-size: 15px;
   line-height: 135%;
   padding: 4px 8px;
-  background: var(--code-bg);
+  background: #fff0d6;
+  border: 2px solid #111111;
 }
+
+/* ─── App shell: black left sidebar + content ───────────────────────────── */
+.qp-shell {
+  display: flex;
+  align-items: flex-start;
+  min-height: 100svh;
+}
+.qp-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Sidebar collapses to a horizontal top bar on narrow viewports. */
+@media (max-width: 768px) {
+  .qp-shell { flex-direction: column; }
+  .qp-sidebar {
+    position: static !important;
+    width: 100% !important;
+    min-height: auto !important;
+    box-sizing: border-box;
+  }
+  .qp-sidebar-nav {
+    flex-direction: row !important;
+    overflow-x: auto;
+    gap: 6px !important;
+    padding-bottom: 4px;
+  }
+  .qp-sidebar-nav button { white-space: nowrap; flex: none; }
+}
+
+input::placeholder,
+textarea::placeholder { color: #b3ada0; }
+
+/* Brutalist focus: swap border to pink, keep the offset shadow. */
+input:focus,
+textarea:focus,
+select:focus { border-color: #ff2e63 !important; }
