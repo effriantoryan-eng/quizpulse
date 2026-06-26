@@ -91,6 +91,10 @@ code {
   min-width: 0;
 }
 
+/* Desktop icon-only rail: hide text labels when the sidebar is collapsed. */
+.qp-sidebar-collapsed .qp-brand-label,
+.qp-sidebar-collapsed .qp-nav-label { display: none; }
+
 /* Sidebar collapses to a horizontal top bar on narrow viewports. */
 @media (max-width: 768px) {
   .qp-shell { flex-direction: column; }
@@ -100,6 +104,10 @@ code {
     min-height: auto !important;
     box-sizing: border-box;
   }
+  /* Collapsing is meaningless as a top bar — always show labels, hide toggle. */
+  .qp-collapse-btn { display: none !important; }
+  .qp-sidebar-collapsed .qp-brand-label,
+  .qp-sidebar-collapsed .qp-nav-label { display: inline !important; }
   .qp-sidebar-nav {
     flex-direction: row !important;
     overflow-x: auto;

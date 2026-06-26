@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 import API_BASE from '../api'
 
@@ -7,24 +7,60 @@ function formatDate(iso) {
   return new Date(iso).toLocaleString('en-AU', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
-function Section({ title, count, rows, columns, truncatedAt }) {
-  const [open, setOpen] = useState(true)
+// Lazy table: fetches its first page only when first expanded, then caches.
+// "Load more" appends the next page using the continuation token.
+function Section({ title, table, count, columns, code, sortRows }) {
+  const [open, setOpen]         = useState(false)
+  const [rows, setRows]         = useState(null)   // null = not yet loaded
+  const [continuation, setCont] = useState(null)
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState(null)
+
+  const fetchPage = useCallback(async (token) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const url = `${API_BASE}/usageLog?code=${encodeURIComponent(code || '')}&table=${table}&limit=50`
+        + (token ? `&continuation=${encodeURIComponent(token)}` : '')
+      const res = await fetch(url)
+      if (!res.ok) throw new Error(`Server error ${res.status}`)
+      const json = await res.json()
+      setRows(prev => (prev && token ? [...prev, ...json.rows] : json.rows))
+      setCont(json.continuation)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }, [code, table])
+
+  function handleToggle() {
+    const next = !open
+    setOpen(next)
+    if (next && rows === null) fetchPage(null)   // first expand → load page 1
+  }
+
+  const display = rows && sortRows ? sortRows(rows) : rows
 
   return (
     <div style={{ marginBottom: '32px' }}>
       <div
-        onClick={() => setOpen(o => !o)}
+        onClick={handleToggle}
         style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', marginBottom: '10px' }}
       >
         <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '600', color: '#141414' }}>{title}</h3>
         <span style={{ fontSize: '12px', background: '#ffe14d', color: '#ff2e63', borderRadius: '12px', padding: '2px 8px', fontWeight: '500' }}>
-          {count}{count >= truncatedAt ? '+' : ''}
+          {count}
         </span>
         <span style={{ fontSize: '12px', color: '#aaa', marginLeft: 'auto' }}>{open ? '▲ collapse' : '▼ expand'}</span>
       </div>
 
       {open && (
-        count === 0 ? (
+        error ? (
+          <div style={{ fontSize: '13px', color: '#c0392b', padding: '12px 0' }}>{error}</div>
+        ) : rows === null && loading ? (
+          <div style={{ fontSize: '13px', color: '#aaa', padding: '12px 0' }}>Loading…</div>
+        ) : count === 0 ? (
           <div style={{ fontSize: '13px', color: '#aaa', padding: '12px 0' }}>No records.</div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
@@ -39,7 +75,7 @@ function Section({ title, count, rows, columns, truncatedAt }) {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row, i) => (
+                {(display || []).map((row, i) => (
                   <tr key={row.id || i} style={{ background: i % 2 === 0 ? '#fafafa' : 'white' }}>
                     {columns.map(col => (
                       <td key={col.key} style={{ padding: '6px 10px', borderBottom: '1px solid #f0f0f0', color: '#333', maxWidth: '280px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -50,10 +86,14 @@ function Section({ title, count, rows, columns, truncatedAt }) {
                 ))}
               </tbody>
             </table>
-            {count >= truncatedAt && (
-              <div style={{ fontSize: '11px', color: '#e67e22', marginTop: '6px' }}>
-                Results capped at {truncatedAt}. Add ?limit=N to the URL to increase (max 1000).
-              </div>
+            {continuation && (
+              <button
+                onClick={() => fetchPage(continuation)}
+                disabled={loading}
+                style={{ marginTop: '10px', fontSize: '12px', fontWeight: 600, padding: '7px 16px', borderRadius: '8px', border: '2px solid #111', background: loading ? '#eee' : '#ffe14d', color: '#111', cursor: loading ? 'default' : 'pointer' }}
+              >
+                {loading ? 'Loading…' : 'Load more'}
+              </button>
             )}
           </div>
         )
@@ -71,7 +111,7 @@ export default function AdminLog() {
   const [error, setError]     = useState(null)
 
   useEffect(() => {
-    async function fetchLog() {
+    async function fetchSummary() {
       try {
         const url = `${API_BASE}/usageLog?code=${encodeURIComponent(code || '')}`
         const res = await fetch(url)
@@ -84,7 +124,7 @@ export default function AdminLog() {
         setLoading(false)
       }
     }
-    fetchLog()
+    fetchSummary()
   }, [code])
 
   if (loading) return <div style={{ padding: '40px', color: '#888', fontSize: '14px' }}>Loading admin log…</div>
@@ -119,16 +159,6 @@ export default function AdminLog() {
     { key: 'completedAt',  label: 'Completed',    render: r => formatDate(r.completedAt) },
   ]
 
-  const uniqueTeachers = new Set([
-    ...data.questions.map(q => q.teacherId),
-    ...data.quizzes.map(q => q.teacherId),
-  ]).size
-
-  const uniqueSessions = new Set((data.pageviews || []).map(p => p.sessionId).filter(Boolean)).size
-
-  // Sort pageviews newest first
-  const sortedPageviews = [...(data.pageviews || [])].sort((a, b) => new Date(b.visitedAt) - new Date(a.visitedAt))
-
   const PAGEVIEW_COLS = [
     { key: 'visitedAt',   label: 'Time',        render: r => formatDate(r.visitedAt) },
     { key: 'page',        label: 'Page' },
@@ -140,6 +170,9 @@ export default function AdminLog() {
     { key: 'screen',      label: 'Screen',      render: r => r.screenWidth && r.screenHeight ? `${r.screenWidth}×${r.screenHeight}` : '—' },
     { key: 'userAgent',   label: 'User agent',  render: r => r.userAgent || '—' },
   ]
+
+  // Pageviews come back unordered (no composite index) — sort newest-first client-side.
+  const sortPageviews = rows => [...rows].sort((a, b) => new Date(b.visitedAt) - new Date(a.visitedAt))
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px' }}>
@@ -159,13 +192,13 @@ export default function AdminLog() {
             <div style={{ fontSize: '11px', color: '#ffd000', marginBottom: '4px' }}>Retrieved</div>
             <div style={{ fontSize: '13px', color: 'white', fontWeight: '500' }}>{formatDate(data.retrievedAt)}</div>
             <div style={{ fontSize: '11px', color: '#ffd000', marginTop: '8px', marginBottom: '4px' }}>Unique teachers</div>
-            <div style={{ fontSize: '20px', color: '#ffd000', fontWeight: '700' }}>{uniqueTeachers}</div>
+            <div style={{ fontSize: '20px', color: '#ffd000', fontWeight: '700' }}>{data.uniqueTeachers}</div>
             <div style={{ fontSize: '11px', color: '#ffd000', marginTop: '8px', marginBottom: '4px' }}>Unique sessions</div>
-            <div style={{ fontSize: '20px', color: '#ffd000', fontWeight: '700' }}>{uniqueSessions}</div>
+            <div style={{ fontSize: '20px', color: '#ffd000', fontWeight: '700' }}>{data.uniqueSessions}</div>
           </div>
         </div>
         <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '11px', color: '#ffd000' }}>
-          Rows capped at {data.truncatedAt} per table · Secured by Azure Function key · Not linked from public nav
+          Rows load on demand, {data.pageSize} per page · Secured by Azure Function key · Not linked from public nav
         </div>
       </div>
 
@@ -183,10 +216,10 @@ export default function AdminLog() {
         ))}
       </div>
 
-      <Section title="Page views" count={sortedPageviews.length} rows={sortedPageviews} columns={PAGEVIEW_COLS} truncatedAt={data.truncatedAt} />
-      <Section title="Questions"  count={data.counts.questions}  rows={data.questions}  columns={QUESTION_COLS} truncatedAt={data.truncatedAt} />
-      <Section title="Quizzes"    count={data.counts.quizzes}    rows={data.quizzes}    columns={QUIZ_COLS}     truncatedAt={data.truncatedAt} />
-      <Section title="Responses"  count={data.counts.responses}  rows={data.responses}  columns={RESPONSE_COLS} truncatedAt={data.truncatedAt} />
+      <Section title="Page views" table="pageviews" count={data.counts.pageviews} columns={PAGEVIEW_COLS} code={code} sortRows={sortPageviews} />
+      <Section title="Questions"  table="questions" count={data.counts.questions} columns={QUESTION_COLS} code={code} />
+      <Section title="Quizzes"    table="quizzes"   count={data.counts.quizzes}   columns={QUIZ_COLS}     code={code} />
+      <Section title="Responses"  table="responses" count={data.counts.responses} columns={RESPONSE_COLS} code={code} />
     </div>
   )
 }
