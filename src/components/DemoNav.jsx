@@ -1,5 +1,8 @@
+import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { T } from '../theme'
+
+const COLLAPSE_KEY = 'quizpulse_sidebar_collapsed'
 
 // Inline stroke icons (Feather-style), sized 17px to match the handoff.
 const I = {
@@ -35,37 +38,79 @@ function Icon({ children }) {
 export default function DemoNav() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem(COLLAPSE_KEY) === '1')
 
+  function toggleCollapsed() {
+    setCollapsed(c => {
+      const next = !c
+      localStorage.setItem(COLLAPSE_KEY, next ? '1' : '0')
+      return next
+    })
+  }
+
+  // On mobile the sidebar is a static top bar (CSS), where labels always show
+  // regardless of `collapsed`. The `qp-sidebar-collapsed` class scopes the
+  // icon-only styling to desktop only.
   return (
-    <aside className="qp-sidebar" style={{
-      width: '252px',
-      flex: 'none',
-      minHeight: '100vh',
-      position: 'sticky',
-      top: 0,
-      background: T.navBg,
-      padding: '22px 16px',
-      fontFamily: T.font,
-    }}>
+    <aside
+      className={`qp-sidebar${collapsed ? ' qp-sidebar-collapsed' : ''}`}
+      style={{
+        width: collapsed ? '72px' : '252px',
+        flex: 'none',
+        minHeight: '100vh',
+        position: 'sticky',
+        top: 0,
+        background: T.navBg,
+        padding: '22px 16px',
+        fontFamily: T.font,
+        transition: 'width .15s ease',
+      }}
+    >
       {/* Brand row */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '11px', padding: '4px 8px 22px', cursor: 'pointer' }}
-           onClick={() => navigate('/')}>
-        <div style={{
+      <div className="qp-brand" style={{
+        display: 'flex', alignItems: 'center', gap: '11px',
+        padding: '4px 8px 22px',
+        justifyContent: collapsed ? 'center' : 'flex-start',
+      }}>
+        <div onClick={() => navigate('/')} style={{
           width: '34px', height: '34px', borderRadius: '9px', background: T.logoGrad,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', flexShrink: 0,
         }}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" aria-hidden="true">
             <path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z" />
           </svg>
         </div>
-        <span style={{ fontWeight: 800, fontSize: '18px', color: T.navText, letterSpacing: '-0.01em' }}>
+        <span className="qp-brand-label" style={{ fontWeight: 800, fontSize: '18px', color: T.navText, letterSpacing: '-0.01em', cursor: 'pointer' }}
+              onClick={() => navigate('/')}>
           QuizPulse
         </span>
-        <span style={{
+        <span className="qp-brand-label" style={{
           fontSize: '10px', fontWeight: 700, padding: '3px 7px', borderRadius: '5px',
           background: T.badgeBg, color: T.badgeText, textTransform: 'lowercase',
-        }}>beta</span>
+        }}>demo</span>
       </div>
+
+      {/* Collapse toggle (hidden on mobile via CSS) */}
+      <button
+        className="qp-collapse-btn"
+        onClick={toggleCollapsed}
+        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: '100%', padding: '7px', marginBottom: '14px',
+          background: 'transparent', border: `1.5px solid ${T.navMuted}`,
+          borderRadius: '6px', color: T.navMuted, cursor: 'pointer',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.color = '#ffffff'; e.currentTarget.style.borderColor = '#ffffff' }}
+        onMouseLeave={e => { e.currentTarget.style.color = T.navMuted; e.currentTarget.style.borderColor = T.navMuted }}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          {collapsed ? <polyline points="9 18 15 12 9 6" /> : <polyline points="15 18 9 12 15 6" />}
+        </svg>
+      </button>
 
       {/* Nav items */}
       <nav className="qp-sidebar-nav" style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
@@ -76,10 +121,13 @@ export default function DemoNav() {
             <button
               key={label}
               onClick={() => navigate(path)}
+              title={collapsed ? label : undefined}
+              aria-label={label}
               style={{
                 display: 'flex', alignItems: 'center', gap: '11px',
                 padding: '10px 12px', borderRadius: '6px', border: 'none',
                 cursor: 'pointer', textAlign: 'left',
+                justifyContent: collapsed ? 'center' : 'flex-start',
                 fontFamily: T.font, fontSize: '14px',
                 fontWeight: active ? 700 : 600,
                 background: active ? T.navActiveBg : 'transparent',
@@ -90,7 +138,7 @@ export default function DemoNav() {
               onMouseLeave={e => { if (!active) e.currentTarget.style.color = T.navMuted }}
             >
               <Icon>{icon}</Icon>
-              {label}
+              <span className="qp-nav-label">{label}</span>
             </button>
           )
         })}
