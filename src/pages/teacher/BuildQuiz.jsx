@@ -72,6 +72,21 @@ function BuildQuiz() {
   if (loading) return <div style={{ ...PAGE, color: T.muted }}>Loading questions…</div>
   if (error) return <div style={{ ...PAGE, color: T.red }}>Failed to load questions: {error}</div>
 
+  if (allQuestions.length === 0) {
+    return (
+      <div style={PAGE}>
+        <h1 style={{ marginBottom: '16px' }}>Build quiz</h1>
+        <div style={{ textAlign: 'center', padding: '40px 24px', color: T.muted, fontSize: '15px', border: `2px dashed ${T.border}`, borderRadius: T.radius, marginBottom: '20px', lineHeight: 1.5 }}>
+          You don't have any questions yet — a quiz is built from your question bank.
+          <br />Create a few questions first, then come back here to build a quiz.
+        </div>
+        <button onClick={() => navigate('/teacher/create')} style={{ ...btnPrimary(), width: '100%' }}>
+          Create your first question →
+        </button>
+      </div>
+    )
+  }
+
   const iconBtn = { background: T.surface, border: `2px solid ${T.border}`, borderRadius: T.radiusSm, cursor: 'pointer', fontSize: '11px', color: T.text, padding: '2px 6px', lineHeight: 1 }
 
   return (

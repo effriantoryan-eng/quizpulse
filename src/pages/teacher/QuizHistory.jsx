@@ -5,14 +5,9 @@ import { useHint } from '../../hooks/useHint'
 import HintBanner from '../../components/HintBanner'
 import API_BASE from '../../api'
 import { T, btnPrimary } from '../../theme'
+import { CLASS_NAMES } from '../../presetClasses'
 
 const PAGE = { maxWidth: 720, margin: 0, padding: 'clamp(28px,5vw,42px) clamp(20px,5vw,52px) 80px', fontFamily: T.font }
-
-const CLASS_NAMES = {
-  'yr9-sci':  'Year 9 Science',
-  'yr10-mth': 'Year 10 Maths',
-  'yr7-eng':  'Year 7 English',
-}
 
 function formatDate(iso) {
   if (!iso) return '—'
