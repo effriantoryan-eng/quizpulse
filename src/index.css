@@ -91,30 +91,63 @@ code {
   min-width: 0;
 }
 
-/* Desktop icon-only rail: hide text labels when the sidebar is collapsed. */
+/* Desktop icon-only rail: hide text labels + group dividers when collapsed. */
 .qp-sidebar-collapsed .qp-brand-label,
-.qp-sidebar-collapsed .qp-nav-label { display: none; }
+.qp-sidebar-collapsed .qp-nav-label,
+.qp-sidebar-collapsed .qp-group-label { display: none; }
 
-/* Sidebar collapses to a horizontal top bar on narrow viewports. */
+/* Mobile topbar + drawer backdrop — hidden on desktop. */
+.qp-mobile-topbar { display: none; }
+.qp-backdrop { display: none; }
+
+/* On narrow viewports the sidebar becomes a hamburger-driven overlay drawer. */
 @media (max-width: 768px) {
   .qp-shell { flex-direction: column; }
+
+  .qp-mobile-topbar {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    position: sticky;
+    top: 0;
+    width: 100%;
+    height: 56px;
+    padding: 0 16px;
+    background: #111111;
+    z-index: 100;
+    box-sizing: border-box;
+    flex: none;
+  }
+
+  /* Drawer: fixed overlay sliding in from the left — never shifts page content. */
   .qp-sidebar {
-    position: static !important;
-    width: 100% !important;
-    min-height: auto !important;
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    min-height: 100vh !important;
+    width: 280px !important;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    z-index: 200;
+    overflow-y: auto;
     box-sizing: border-box;
   }
-  /* Collapsing is meaningless as a top bar — always show labels, hide toggle. */
+  .qp-sidebar.qp-drawer-open { transform: translateX(0); }
+
+  /* Collapse toggle is desktop-only; labels always show inside the drawer. */
   .qp-collapse-btn { display: none !important; }
   .qp-sidebar-collapsed .qp-brand-label,
-  .qp-sidebar-collapsed .qp-nav-label { display: inline !important; }
-  .qp-sidebar-nav {
-    flex-direction: row !important;
-    overflow-x: auto;
-    gap: 6px !important;
-    padding-bottom: 4px;
+  .qp-sidebar-collapsed .qp-nav-label,
+  .qp-sidebar-collapsed .qp-group-label { display: inline !important; }
+
+  .qp-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 199;
   }
-  .qp-sidebar-nav button { white-space: nowrap; flex: none; }
 }
 
 input::placeholder,

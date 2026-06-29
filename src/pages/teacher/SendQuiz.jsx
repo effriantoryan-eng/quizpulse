@@ -5,20 +5,9 @@ import { useHint } from '../../hooks/useHint'
 import HintBanner from '../../components/HintBanner'
 import API_BASE from '../../api'
 import { T, label, btnPrimary, btnSecondary, tag } from '../../theme'
+import { PRESET_CLASSES, TOPIC_COLORS } from '../../presetClasses'
 
 const PAGE = { maxWidth: 560, margin: 0, padding: 'clamp(28px,5vw,42px) clamp(20px,5vw,52px) 80px', fontFamily: T.font }
-
-const PRESET_CLASSES = [
-  { id: 'yr9-sci',  name: 'Year 9 Science',  students: 28, topic: 'Science'     },
-  { id: 'yr10-mth', name: 'Year 10 Maths',   students: 25, topic: 'Mathematics' },
-  { id: 'yr7-eng',  name: 'Year 7 English',  students: 22, topic: 'English'     },
-]
-
-const TOPIC_COLORS = {
-  Science:     { bg: '#E1F5EE', color: '#085041' },
-  Mathematics: { bg: '#E6F1FB', color: '#0C447C' },
-  English:     { bg: '#FEF3E2', color: '#7A4100' },
-}
 
 function SendQuiz() {
   const { teacherId } = useAuth()

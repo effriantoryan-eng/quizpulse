@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import Home from './pages/Home'
 import DemoGallery from './pages/DemoGallery'
+import TeacherHome from './pages/teacher/TeacherHome'
+import Classes from './pages/teacher/Classes'
 import CreateQuestion from './pages/teacher/CreateQuestion'
 import QuestionBank from './pages/teacher/QuestionBank'
 import BuildQuiz from './pages/teacher/BuildQuiz'
@@ -23,6 +25,8 @@ function AppRoutes() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/demo" element={<DemoGallery />} />
+          <Route path="/teacher/home" element={<TeacherHome />} />
+          <Route path="/teacher/classes" element={<Classes />} />
           <Route path="/teacher/create" element={<CreateQuestion />} />
           <Route path="/teacher/bank" element={<QuestionBank />} />
           <Route path="/teacher/build" element={<BuildQuiz />} />
