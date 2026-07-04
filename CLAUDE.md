@@ -157,6 +157,15 @@ Uses inline styles and the QuizPulse colour token object `C` defined at the top 
 | Quiz analytics | Live in demo | Horizontal bar chart, Q1/Q2/Q3 pill selector, 4 bars per question, correct=green |
 | Quiz scheduling | Post-MVP | Send now / schedule toggle, day-of-week pills, time input, plain-English summary, success state |
 | Push notifications | Post-MVP | Dark gradient lock-screen phone mockup + Azure Notification Hubs explainer |
+| Confidence & misconceptions | Post-MVP | Four-cell (correct×confident) breakdown, misconception hero card, ported from the PWA-project mockup reference — see below |
+| Population benchmarking | Post-MVP | "Your class vs other classes" confident-but-wrong comparison, ported from the PWA-project mockup reference |
+| APST evidence export | Post-MVP | Standards-aligned PDF export mockup with placeholder-gated Export button, ported from the PWA-project mockup reference |
+
+Cards 5–7 (Confidence & misconceptions, Population benchmarking, APST evidence export) were adapted
+from a mockup reference for a separate, more advanced sibling project (`quizpulse - PWA`), whose
+schema includes a `confidence` field on answers that this project's `responses` container does not
+have (see Cosmos DB schema below). All three are illustrative-data mockups only — no backend for
+confidence tracking, benchmarking, or PDF export exists here — hence all three are badged `Post-MVP`.
 
 Design tokens (`C` object at top of file):
 ```js
