@@ -10,6 +10,8 @@ const C = {
   greenLight:  '#eaf6dd',
   red:         '#A32D2D',
   redLight:    '#FCEBEB',
+  terracotta:      '#B5482E',
+  terracottaLight: '#FBEDE8',
   border:      '#111111',
   text:        '#141414',
   sub:         '#6b6b6b',
@@ -472,6 +474,106 @@ function Card4() {
   )
 }
 
+// ─── Card 5: Confidence & misconceptions ──────────────────────────
+const CELLS = [
+  { key: 'cc', label: 'Correct, confident', bg: C.greenLight, border: C.green, count: 18 },
+  { key: 'cu', label: 'Correct, unsure',    bg: '#EEF6E4',    border: '#6B9A44', count: 4 },
+  { key: 'ic', label: 'Misconception',      bg: C.terracottaLight, border: C.terracotta, count: 5 },
+  { key: 'iu', label: 'Incorrect, unsure',  bg: '#FDF3E3',    border: '#B8860B', count: 1 },
+]
+
+function Card5() {
+  const total = CELLS.reduce((a, c) => a + c.count, 0)
+  const misconception = CELLS.find(c => c.key === 'ic')
+  return (
+    <CardShell title="Confidence & misconceptions" subtitle="Who's confidently wrong, not just wrong" badge="Post-MVP" hint="Each answer is tagged with how sure the student felt. This surfaces misconceptions — confident but incorrect — the pattern a raw score hides.">
+      <div style={{ background: C.terracottaLight, border: `1px solid ${C.terracotta}`, borderRadius: '10px', padding: '12px 14px', marginBottom: '14px' }}>
+        <div style={{ fontSize: '13px', fontWeight: '700', color: C.terracotta, marginBottom: '2px' }}>
+          {misconception.count} students were confident but got it wrong
+        </div>
+        <div style={{ fontSize: '11px', color: C.terracotta, opacity: 0.85 }}>Worst on: "What gas do plants absorb?"</div>
+      </div>
+
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
+        {CELLS.map(c => (
+          <div key={c.key} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '10px', color: C.sub }}>
+            <span style={{ width: '10px', height: '10px', borderRadius: '3px', background: c.bg, border: `1px solid ${c.border}` }} />
+            {c.label}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', height: '14px', borderRadius: '7px', overflow: 'hidden', marginBottom: '8px' }}>
+        {CELLS.map(c => (
+          <div key={c.key} style={{ width: `${(c.count / total) * 100}%`, background: c.border }} title={c.label} />
+        ))}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
+        {CELLS.map(c => (
+          <div key={c.key} style={{ background: c.bg, border: `1px solid ${c.border}`, borderRadius: '8px', padding: '6px 8px' }}>
+            <div style={{ fontSize: '11px', fontWeight: '700', color: c.border }}>{c.count} · {Math.round((c.count/total)*100)}%</div>
+            <div style={{ fontSize: '9px', color: c.border, opacity: 0.85 }}>{c.label}</div>
+          </div>
+        ))}
+      </div>
+    </CardShell>
+  )
+}
+
+// ─── Card 6: Population benchmarking ──────────────────────────────
+function Card6() {
+  const yourPct = 18
+  const normPct = 11
+  return (
+    <CardShell title="Population benchmarking" subtitle="How your class compares to other classes on this topic" badge="Post-MVP" hint="Compares your class's confident-but-wrong rate to other classes covering the same topic — not just a raw score, whether confidence is unusually miscalibrated.">
+      <div style={{ background: C.terracottaLight, border: `1px solid ${C.terracotta}`, borderRadius: '10px', padding: '12px 14px', marginBottom: '16px' }}>
+        <div style={{ fontSize: '20px', fontWeight: '700', color: C.terracotta }}>{yourPct}%</div>
+        <div style={{ fontSize: '11px', color: C.terracotta }}>confident-but-wrong — vs {normPct}% for other classes on this topic, {yourPct - normPct} points above the norm. Worth a closer look.</div>
+      </div>
+
+      {[
+        { label: 'Correct answers', you: 74, norm: 76 },
+        { label: 'Confident but wrong', you: yourPct, norm: normPct },
+      ].map(row => (
+        <div key={row.label} style={{ marginBottom: '12px' }}>
+          <div style={{ fontSize: '11px', color: C.text, fontWeight: '600', marginBottom: '5px' }}>{row.label}</div>
+          <div style={{ position: 'relative', height: '10px', background: '#f0f0f0', borderRadius: '5px', marginBottom: '3px' }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${row.norm}%`, background: C.muted, opacity: 0.4, borderRadius: '5px' }} />
+            <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${row.you}%`, background: C.purple, borderRadius: '5px' }} />
+          </div>
+          <div style={{ fontSize: '9px', color: C.sub }}>You: {row.you}% &nbsp;•&nbsp; Norm: {row.norm}%</div>
+        </div>
+      ))}
+    </CardShell>
+  )
+}
+
+// ─── Card 7: APST evidence export ─────────────────────────────────
+function Card7() {
+  const placeholdersLeft = 2
+  return (
+    <CardShell title="APST evidence export" subtitle="Turn a quiz into standards-aligned PDF evidence" badge="Post-MVP" hint="Generates a PDF for teacher accreditation evidence: matched APST standards, a reflection prompt, and quiz summary stats — no student-identifiable data included.">
+      <div style={{ fontSize: '11px', fontWeight: '600', color: C.text, marginBottom: '6px' }}>Matched standards</div>
+      <div style={{ background: '#f5f5f5', borderRadius: '8px', padding: '8px 10px', fontSize: '11px', color: C.sub, marginBottom: '14px' }}>
+        APST 2.1 — Content and teaching strategies · APST 5.1 — Assess learning
+      </div>
+
+      <div style={{ fontSize: '11px', fontWeight: '600', color: C.text, marginBottom: '6px' }}>Reflection</div>
+      <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: '8px', padding: '8px 10px', fontSize: '11px', color: C.sub, marginBottom: '10px', lineHeight: '1.5' }}>
+        This check-in showed most students grasped <span style={{ background: '#FFF3CD' }}>[PERSONALISE: key concept]</span> but
+        struggled with <span style={{ background: '#FFF3CD' }}>[PERSONALISE: misconception]</span>.
+      </div>
+      <div style={{ padding: '8px 10px', background: '#FFF3CD', borderRadius: '8px', fontSize: '11px', color: '#856404', marginBottom: '14px' }}>
+        Export stays disabled until every placeholder is replaced.
+      </div>
+
+      <button disabled style={{ width: '100%', padding: '10px', background: '#ddd', color: '#888', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: '600', cursor: 'not-allowed' }}>
+        Export PDF — {placeholdersLeft} placeholders remaining
+      </button>
+    </CardShell>
+  )
+}
+
 // ─── Page ─────────────────────────────────────────────────────────
 export default function DemoGallery() {
   const width = useWindowWidth()
@@ -501,6 +603,9 @@ export default function DemoGallery() {
         <div style={{ display: 'grid', gridTemplateColumns: cols, gap: '20px' }}>
           <Card2 />
           <Card3 />
+          <Card5 />
+          <Card6 />
+          <Card7 />
         </div>
       </div>
     </div>
