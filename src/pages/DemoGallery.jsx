@@ -521,19 +521,62 @@ function Card5() {
 }
 
 // ─── Card 6: Population benchmarking ──────────────────────────────
+// Illustrative reference-class dots — not real data (see CLAUDE.md)
+const REFERENCE_CLASSES = [
+  [62, 9], [70, 14], [55, 18], [80, 7], [48, 22], [88, 5], [65, 11], [72, 8],
+  [58, 16], [77, 10], [40, 26], [83, 6], [67, 13], [51, 20], [90, 4], [60, 15],
+  [74, 9], [45, 24], [85, 7], [63, 12],
+]
+
+function PopulationScatter({ you, norm }) {
+  const W = 260, H = 160, PAD = 20
+  const x = pct => PAD + (pct / 100) * (W - PAD * 2)
+  const y = pct => H - PAD - (pct / 40) * (H - PAD * 2)
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} style={{ display: 'block', marginBottom: '4px' }}>
+      {/* corner tints: bottom-right = good, top-left = concern */}
+      <rect x={x(norm.correct)} y={PAD} width={W - PAD - x(norm.correct)} height={y(norm.wrong) - PAD} fill={C.terracottaLight} opacity="0.5" />
+      <rect x={PAD} y={y(norm.wrong)} width={x(norm.correct) - PAD} height={H - PAD - y(norm.wrong)} fill={C.greenLight} opacity="0.6" />
+
+      {/* crosshair at population averages */}
+      <line x1={x(norm.correct)} y1={PAD} x2={x(norm.correct)} y2={H - PAD} stroke={C.muted} strokeDasharray="3,3" />
+      <line x1={PAD} y1={y(norm.wrong)} x2={W - PAD} y2={y(norm.wrong)} stroke={C.muted} strokeDasharray="3,3" />
+
+      {/* axes */}
+      <line x1={PAD} y1={H - PAD} x2={W - PAD} y2={H - PAD} stroke={C.border} />
+      <line x1={PAD} y1={PAD} x2={PAD} y2={H - PAD} stroke={C.border} />
+      <text x={W / 2} y={H - 4} fontSize="8" fill={C.sub} textAnchor="middle">Correct answers →</text>
+      <text x={10} y={H / 2} fontSize="8" fill={C.sub} textAnchor="middle" transform={`rotate(-90 10 ${H / 2})`}>Confident-but-wrong →</text>
+
+      {/* reference classes */}
+      {REFERENCE_CLASSES.map(([c, w], i) => (
+        <circle key={i} cx={x(c)} cy={y(w)} r="3" fill={C.muted} opacity="0.5" />
+      ))}
+
+      {/* your class, highlighted */}
+      <circle cx={x(you.correct)} cy={y(you.wrong)} r="5" fill={C.terracotta} stroke="white" strokeWidth="1.5" />
+      <text x={x(you.correct) + 8} y={y(you.wrong) + 3} fontSize="9" fontWeight="700" fill={C.terracotta}>Your class</text>
+    </svg>
+  )
+}
+
 function Card6() {
-  const yourPct = 18
-  const normPct = 11
+  const you = { correct: 74, wrong: 18 }
+  const norm = { correct: 76, wrong: 11 }
   return (
     <CardShell title="Population benchmarking" subtitle="How your class compares to other classes on this topic" badge="Post-MVP" hint="Compares your class's confident-but-wrong rate to other classes covering the same topic — not just a raw score, whether confidence is unusually miscalibrated.">
       <div style={{ background: C.terracottaLight, border: `1px solid ${C.terracotta}`, borderRadius: '10px', padding: '12px 14px', marginBottom: '16px' }}>
-        <div style={{ fontSize: '20px', fontWeight: '700', color: C.terracotta }}>{yourPct}%</div>
-        <div style={{ fontSize: '11px', color: C.terracotta }}>confident-but-wrong — vs {normPct}% for other classes on this topic, {yourPct - normPct} points above the norm. Worth a closer look.</div>
+        <div style={{ fontSize: '20px', fontWeight: '700', color: C.terracotta }}>{you.wrong}%</div>
+        <div style={{ fontSize: '11px', color: C.terracotta }}>confident-but-wrong — vs {norm.wrong}% for other classes on this topic, {you.wrong - norm.wrong} points above the norm. Worth a closer look.</div>
       </div>
 
+      <PopulationScatter you={you} norm={norm} />
+      <div style={{ fontSize: '9px', color: C.muted, marginBottom: '16px' }}>Each dot is a reference class on this topic. Dashed lines mark the population average.</div>
+
       {[
-        { label: 'Correct answers', you: 74, norm: 76 },
-        { label: 'Confident but wrong', you: yourPct, norm: normPct },
+        { label: 'Correct answers', you: you.correct, norm: norm.correct },
+        { label: 'Confident but wrong', you: you.wrong, norm: norm.wrong },
       ].map(row => (
         <div key={row.label} style={{ marginBottom: '12px' }}>
           <div style={{ fontSize: '11px', color: C.text, fontWeight: '600', marginBottom: '5px' }}>{row.label}</div>
